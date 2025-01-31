@@ -1,4 +1,4 @@
-function mymetric_tracker(domain) {
+function mymetric_tracker(domain, client_id, session_id) {
     function getCookie(name) {
         var value = "; " + document.cookie;
         var parts = value.split("; " + name + "=");
@@ -23,8 +23,8 @@ function mymetric_tracker(domain) {
     }
 
     var cookies = {
-        client_id: "{{gtagApiResult.client_id}}",
-        session_id: "{{gtagApiResult.session_id}}",
+        client_id: client_id,
+        session_id: session_id,
         fbp: getCookie("_fbp"),
         fbc: getCookie("_fbc"),
         gclid: getCookie("_gcl_aw"),
