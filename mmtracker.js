@@ -1,4 +1,39 @@
-function mymetric_tracker(domain, client_id, session_id) {
+function mymetric_tracker(domain, measurementId) {
+
+    function fetchGtagFields(measurementId) {
+        function gtag(command, measurementId, field, callback) {
+            if (typeof window.gtag === 'function') {
+                window.gtag(command, measurementId, field, callback);
+            } else {
+                console.error('gtag não está definido');
+                callback(null);
+            }
+        }
+
+        let fields = ['client_id', 'session_id', 'gclid'];
+        const dataObj = {};
+
+        return new Promise((resolve) => {
+            function gtagGet() {
+                gtag('get', measurementId, fields[0], val => {
+                    dataObj[fields[0]] = val;
+                    fields.shift();
+                    if (fields.length) {
+                        gtagGet();  // Continua recursão
+                    } else {
+                        resolve(dataObj);  // Retorna o resultado final
+                    }
+                });
+            }
+
+            if (fields.length) {
+                gtagGet();
+            } else {
+                resolve(dataObj);
+            }
+        });
+    }
+
     function getCookie(name) {
         var value = "; " + document.cookie;
         var parts = value.split("; " + name + "=");
@@ -22,50 +57,57 @@ function mymetric_tracker(domain, client_id, session_id) {
         return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    var cookies = {
-        client_id: client_id,
-        session_id: session_id,
-        fbp: getCookie("_fbp"),
-        fbc: getCookie("_fbc"),
-        gclid: getCookie("_gcl_aw"),
-        ua: btoa(navigator.userAgent) // Encode the user agent
-    };
+    // Chama a função assíncrona antes de usar os valores
+    fetchGtagFields(measurementId).then(dataObj => {
+        console.log('Dados obtidos:', dataObj);
+        var client_id = dataObj.client_id;
+        var session_id = dataObj.session_id;
 
-    var cookiesJson = JSON.stringify(cookies);
+        var cookies = {
+            client_id: client_id,
+            session_id: session_id,
+            fbp: getCookie("_fbp"),
+            fbc: getCookie("_fbc"),
+            gclid: getCookie("_gcl_aw"),
+            ua: btoa(navigator.userAgent) // Encode the user agent
+        };
 
-    // Set cookie
-    set_cookie("mm_tracker", cookiesJson, 365, domain);  
+        var cookiesJson = JSON.stringify(cookies);
 
-    // Send to Shopify via Ajax
+        // Define o cookie corretamente
+        set_cookie("mm_tracker", cookiesJson, 365, domain);
+
+        // Atualiza o carrinho após garantir que os valores estão definidos
+        updateCart();
+    });
+
     function updateCart() {
-      var data = {
-        attributes: {
-          mm_tracker: getCookie("mm_tracker")
-        }
-      };
-    
-    fetch('/cart/update.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      })
+        var data = {
+            attributes: {
+                mm_tracker: getCookie("mm_tracker")
+            }
+        };
+
+        fetch('/cart/update.js', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
         .then(function(response) {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
         })
         .then(function(data) {
-          console.log('Cart updated successfully:', data);
+            console.log('Cart updated successfully:', data);
         })
         .catch(function(error) {
-          console.error('There was a problem with the fetch operation:', error);
+            console.error('There was a problem with the fetch operation:', error);
         });
     }
 
-    // Call the function
-    updateCart();
     console.log("====================");
 }
