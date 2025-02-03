@@ -23,7 +23,7 @@ document.head.appendChild(mmtr);
 <script type="text/javascript">
  
  var mmshp = document.createElement("script");
- mmshp.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mmtracker.js";
+ mmshp.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js";
  mmshp.onload = function() {
       const gtm_id = 'GTM-PDPQT372'; // GTM ID
       const ga_id = 'G-SFSKL08Y9J'; // GA4 Measurement ID
