@@ -17,7 +17,7 @@ document.head.appendChild(mmtr);
 ```
 ================================
 
-## MyMetric Tracker
+## MyMetric Shopify Pixel
 
 ```
 <script type="text/javascript">
