@@ -18,7 +18,7 @@ document.head.appendChild(mmtr);
 
 ## MyMetric Experiment
 
-```
+```html
 <script type="text/javascript">
  
 var mmtr_exp = document.createElement("script");
