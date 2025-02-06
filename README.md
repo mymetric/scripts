@@ -2,7 +2,7 @@
 
 ## MyMetric Tracker
 
-```
+```html
 <script type="text/javascript">
  
 var mmtr = document.createElement("script");
