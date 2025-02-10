@@ -50,6 +50,8 @@ function experiment_changes(exp_id) {
 ## MyMetric Popup
 
 ```html
+<script type="text/javascript">
+
 (function(d, s, url) {
   var img = 'https://cdn.shopify.com/s/files/1/0619/0206/1748/files/img_popup_desk.png?v=1737035623';
   var title = 'Ganhe 20% OFF e um brinde';
@@ -71,4 +73,6 @@ function experiment_changes(exp_id) {
   };
   d.head.appendChild(js);
 })(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@main/popup.js');
+
+</script>
 ```
