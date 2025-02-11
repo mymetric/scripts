@@ -82,29 +82,27 @@ function mymetric_tracker(domain, measurementId) {
     });
 
     function updateCart() {
-        var data = {
-            attributes: {
-                mm_tracker: getCookie("mm_tracker")
-            }
-        };
+    fetch('/cart.js')
+        .then(response => response.json())
+        .then(cart => {
+            var existingAttributes = cart.attributes || {}; // Mantém atributos antigos
 
-        fetch('/cart/update.js', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            var updatedAttributes = {
+                ...existingAttributes, // Mantém os atributos atuais
+                mm_tracker: getCookie("mm_tracker") // Adiciona/atualiza o novo
+            };
+
+            return fetch('/cart/update.js', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attributes: updatedAttributes })
+            });
         })
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(function(data) {
+        .then(response => response.json())
+        .then(data => {
             console.log('Cart updated successfully:', data);
         })
-        .catch(function(error) {
+        .catch(error => {
             console.error('There was a problem with the fetch operation:', error);
         });
     }
