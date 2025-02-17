@@ -75,7 +75,7 @@ var phoneRequired = true;
     createPopup(img, title, subtitle, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, phoneRequired);
   };
   d.head.appendChild(js);
-})(document, 'script', 'https://storage.googleapis.com/datalake/popup.js');
+})(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@main/popup.js');
 
 </script>
 ```
