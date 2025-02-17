@@ -81,6 +81,7 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
   // Verifica se a URL contém "crm", "email" ou "mautic"
   const currentUrl = window.location.href.toLowerCase();
   if (currentUrl.includes('crm') || currentUrl.includes('email') || currentUrl.includes('mautic')) {
+    setCookie('popup_closed', 'true', 7);
     console.log('Popup fechado automaticamente devido à URL contendo termos específicos.');
     return;
   }
