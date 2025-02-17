@@ -52,27 +52,30 @@ function experiment_changes(exp_id) {
 ```html
 <script type="text/javascript">
 
+var img = 'https://orthocrin.com.br/cdn/shop/files/Serie_955.jpg?v=1729166167&width=1000';
+var title = 'Você ganhou frete grátis e mais 3% de desconto na sua primeira compra.';
+var subtitle = 'Preencha os seus dados para liberarmos o cupom.';
+var postUrl = 'https://mymetric-hub-shopify.ue.r.appspot.com/?source=orthocrin_popup_subscribe';
+var buttonText = 'Receber cupom';
+var closeText = 'Não quero desconto';
+var afterMessage = 'Parabéns! Utilize o código <strong>ORTHOLOVER</strong> para obter o desconto e o frete grátis na sua primeira compra!';
+var gtmPreviewCode = 'ZW52LTh8LWhwLTZLZ3JUc1BNMkdublhyMFA3Z3wxOTRkNzRjZmRhYTU5YTcyNGEwNDk=';
+var closeDays = 7;
+var buttonColor = '#fff';
+var buttonBgColor = '#910039';
+var disablePhoneField = false;
+var phoneRequired = true;
+
+
+
 (function(d, s, url) {
-  var img = 'https://cdn.shopify.com/s/files/1/0619/0206/1748/files/img_popup_desk.png?v=1737035623';
-  var title = 'Ganhe 20% OFF e um brinde';
-  var subtitle = 'Receba seu desconto e novidades fresquinhas, lançamentos imperdíveis e dicas para nutrir não só o corpo, mas também a alma.';
-  var postUrl = 'https://mymetric-hub-shopify.ue.r.appspot.com/?source=holysoup_popup_subscribe';
-  var buttonText = 'EU QUERO';
-  var closeText = 'Não gosto de promoçoes';
-  var afterMessage = 'Parabéns! Utilize o código <strong>CARNA20</strong> para obter 20% OFF';
-  var gtmPreviewCode = 'ZW52LTh8LWhwLTZLZ3JUc1BNMkdublhyMFA3Z3wxOTRhZGMxZjAzNjhhMGJmNWJkMmQ=';
-  var closeDays = 7;
-  var buttonColor = '#fff';
-  var buttonBgColor = '#00b45a';
-  var disablePhoneField = false;
-  
   var js = d.createElement(s);
   js.src = url;
   js.onload = function() {
-    createPopup(img, title, subtitle, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField);
+    createPopup(img, title, subtitle, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, phoneRequired);
   };
   d.head.appendChild(js);
-})(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@main/popup.js');
+})(document, 'script', 'https://storage.googleapis.com/datalake/popup.js');
 
 </script>
 ```
