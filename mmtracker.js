@@ -74,8 +74,8 @@ function mymetric_tracker(domain, measurementId) {
 
         var cookiesJson = JSON.stringify(cookies);
 
-        // Define o cookie corretamente
-        mm_tracker: domain.includes('orthocrin') ? getCookie("mm_tracker").replace(/:/g, ';') : getCookie("mm_tracker")
+        // Define o cookie corretamente        
+        set_cookie("mm_tracker", cookiesJson, 365, domain);
 
         // Atualiza o carrinho após garantir que os valores estão definidos
         updateCart();
@@ -85,11 +85,12 @@ function mymetric_tracker(domain, measurementId) {
     fetch('/cart.js')
         .then(response => response.json())
         .then(cart => {
-            var existingAttributes = cart.attributes || {}; // Mantém atributos antigos
+            var existinsimgAttributes = cart.attributes || {}; // Mantém atributos antigos
+            mm_tracker: domain.includes('orthocrin') ? getCookie("mm_tracker").replace(/:/g, ';') : getCookie("mm_tracker")
 
             var updatedAttributes = {
                 ...existingAttributes, // Mantém os atributos atuais
-                mm_tracker: getCookie("mm_tracker") // Adiciona/atualiza o novo
+                mm_tracker: mm_tracker // Adiciona/atualiza o novo
             };
 
             return fetch('/cart/update.js', {
