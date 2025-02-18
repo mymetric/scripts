@@ -75,7 +75,7 @@ function mymetric_tracker(domain, measurementId) {
         var cookiesJson = JSON.stringify(cookies);
 
         // Define o cookie corretamente
-        set_cookie("mm_tracker", cookiesJson, 365, domain);
+        mm_tracker: domain.includes('orthocrin') ? getCookie("mm_tracker").replace(/:/g, ';') : getCookie("mm_tracker")
 
         // Atualiza o carrinho após garantir que os valores estão definidos
         updateCart();
