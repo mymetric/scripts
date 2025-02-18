@@ -85,7 +85,7 @@ function mymetric_tracker(domain, measurementId) {
     fetch('/cart.js')
         .then(response => response.json())
         .then(cart => {
-            var existinsimgAttributes = cart.attributes || {}; // Mantém atributos antigos
+            var existingAttributes = cart.attributes || {}; // Mantém atributos antigos
             mm_tracker: domain.includes('orthocrin') ? getCookie("mm_tracker").replace(/:/g, ';') : getCookie("mm_tracker")
 
             var updatedAttributes = {
