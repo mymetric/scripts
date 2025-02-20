@@ -86,11 +86,14 @@ function mymetric_tracker(domain, measurementId) {
         .then(response => response.json())
         .then(cart => {
             var existingAttributes = cart.attributes || {}; // Mantém atributos antigos
-            mm_tracker: domain.includes('orthocrin') ? getCookie("mm_tracker").replace(/:/g, ';') : getCookie("mm_tracker")
+            var mmData = getCookie("mm_tracker");
+            if(domain.includes('orthocrin')) {
+              mmData = .replace(/:/g, ';');
+            }
 
             var updatedAttributes = {
                 ...existingAttributes, // Mantém os atributos atuais
-                mm_tracker: mm_tracker // Adiciona/atualiza o novo
+                mm_tracker: mmData // Adiciona/atualiza o novo
             };
 
             return fetch('/cart/update.js', {
