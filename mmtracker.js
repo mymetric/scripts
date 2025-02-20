@@ -1,5 +1,4 @@
-function mymetric_tracker(domain, measurementId) {
-
+function mymetric_tracker(domain, measurementId, useJQuery = false) {
     function fetchGtagFields(measurementId) {
         function gtag(command, measurementId, field, callback) {
             if (typeof window.gtag === 'function') {
@@ -19,9 +18,9 @@ function mymetric_tracker(domain, measurementId) {
                     dataObj[fields[0]] = val;
                     fields.shift();
                     if (fields.length) {
-                        gtagGet();  // Continua recursão
+                        gtagGet();
                     } else {
-                        resolve(dataObj);  // Retorna o resultado final
+                        resolve(dataObj);
                     }
                 });
             }
@@ -43,7 +42,7 @@ function mymetric_tracker(domain, measurementId) {
     function set_cookie(name, value, days, domain) {
         var expires = "";
         if (days) {
-            var date = new Date(); 
+            var date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
@@ -57,7 +56,6 @@ function mymetric_tracker(domain, measurementId) {
         return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, " "));
     }
 
-    // Chama a função assíncrona antes de usar os valores
     fetchGtagFields(measurementId).then(dataObj => {
         console.log('Dados obtidos:', dataObj);
         var client_id = dataObj.client_id;
@@ -69,47 +67,77 @@ function mymetric_tracker(domain, measurementId) {
             fbp: getCookie("_fbp"),
             fbc: getCookie("_fbc"),
             gclid: getCookie("_gcl_aw"),
-            ua: btoa(navigator.userAgent) // Encode the user agent
+            ua: btoa(navigator.userAgent)
         };
 
         var cookiesJson = JSON.stringify(cookies);
-
-        // Define o cookie corretamente        
         set_cookie("mm_tracker", cookiesJson, 365, domain);
 
-        // Atualiza o carrinho após garantir que os valores estão definidos
-        updateCart();
+        updateCart(cookiesJson);
     });
 
-    function updateCart() {
-    fetch('/cart.js')
-        .then(response => response.json())
-        .then(cart => {
-            var existingAttributes = cart.attributes || {}; // Mantém atributos antigos
-            var mmData = cookiesJson || getCookie("mm_tracker");
-            if(domain.includes('orthocrin')) {
-              mmData = mmData.replace(/:/g, ';');
-            }
+    function updateCart(cookiesJson) {
+        if (useJQuery && typeof jQuery !== 'undefined') {
+            // Modo jQuery
+            $.getJSON('/cart.js')
+                .done(function(cart) {
+                    var existingAttributes = cart.attributes || {};
+                    var mmData = cookiesJson || getCookie("mm_tracker");
+                    if (domain.includes('orthocrin')) {
+                        mmData = mmData.replace(/:/g, ';');
+                    }
 
-            var updatedAttributes = {
-                ...existingAttributes, // Mantém os atributos atuais
-                mm_tracker: mmData // Adiciona/atualiza o novo
-            };
+                    var updatedAttributes = {
+                        ...existingAttributes,
+                        mm_tracker: mmData
+                    };
 
-            return fetch('/cart/update.js', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attributes: updatedAttributes })
-            });
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Cart updated successfully:', data);
-        })
-        .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
-        });
+                    $.ajax({
+                        url: '/cart/update.js',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ attributes: updatedAttributes }),
+                        success: function(data) {
+                            console.log('Cart updated successfully (jQuery):', data);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error updating cart (jQuery):', error);
+                        }
+                    });
+                })
+                .fail(function(error) {
+                    console.error('Error fetching cart (jQuery):', error);
+                });
+        } else {
+            // Modo Fetch nativo
+            fetch('/cart.js')
+                .then(response => response.json())
+                .then(cart => {
+                    var existingAttributes = cart.attributes || {};
+                    var mmData = cookiesJson || getCookie("mm_tracker");
+                    if (domain.includes('orthocrin')) {
+                        mmData = mmData.replace(/:/g, ';');
+                    }
+
+                    var updatedAttributes = {
+                        ...existingAttributes,
+                        mm_tracker: mmData
+                    };
+
+                    return fetch('/cart/update.js', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ attributes: updatedAttributes })
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Cart updated successfully (fetch):', data);
+                })
+                .catch(error => {
+                    console.error('Error updating cart (fetch):', error);
+                });
+        }
+        console.log("====================");
     }
-
-    console.log("====================");
 }
