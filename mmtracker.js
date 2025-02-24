@@ -61,19 +61,24 @@ function mymetric_tracker(domain, measurementId, useJQuery = false) {
         var client_id = dataObj.client_id;
         var session_id = dataObj.session_id;
 
-        var cookies = {
-            client_id: client_id,
-            session_id: session_id,
-            fbp: getCookie("_fbp"),
-            fbc: getCookie("_fbc"),
-            gclid: getCookie("_gcl_aw"),
-            ua: btoa(navigator.userAgent)
-        };
+        // Check if client_id and session_id are not null before proceeding
+        if (client_id !== null && session_id !== null) {
+            var cookies = {
+                client_id: client_id,
+                session_id: session_id,
+                fbp: getCookie("_fbp"),
+                fbc: getCookie("_fbc"),
+                gclid: getCookie("_gcl_aw"),
+                ua: btoa(navigator.userAgent)
+            };
 
-        var cookiesJson = JSON.stringify(cookies);
-        set_cookie("mm_tracker", cookiesJson, 365, domain);
-
-        updateCart(cookiesJson);
+            var cookiesJson = JSON.stringify(cookies);
+            set_cookie("mm_tracker", cookiesJson, 365, domain);
+            updateCart(cookiesJson);
+        } else {
+            console.log('Skipping mm_tracker cookie creation: client_id or session_id is null');
+            updateCart(null); // Still call updateCart but with null value
+        }
     });
 
     function updateCart(cookiesJson) {
