@@ -82,7 +82,7 @@ var phoneRequired = true;
 
 ## MyMetric Shopify Pixel
 
-```html
+```javascript
 // atualizar os IDs de Google Tag e Meta Pixel
 ga_id = 'G-XXXXXXXXXX';
 meta_id = '9999999999999';
