@@ -1,352 +1,390 @@
-function mmShopifyPixel(gtm_id, ga_id, meta_id) {
+//  Função para log estilizado no console
+MMConsoleLog('🟢 Pixel ready - v2.0');
 
-  // Função para log estilizado no console
-  function MMConsoleLog(content) {
-      var mmBadge = 'MM Shopify Pixel';
-      var style1 = "background: #8430ce; color: white; padding: 1px 3px; border-radius: 1px; margin-right: 10px;";
-      var style2 = "color: white; font-weight: bold;";
-      console.log(`%c${mmBadge}%c${content}`, style1, style2);
-  }
-
-  MMConsoleLog('Pixel Loaded');
-
-  // Função para carregar o Meta Pixel
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', meta_id);
-  fbq('track', 'PageView');
-
-  // Função para carregar o GTM
-  (function(w,d,s,l,i){
-    w[l]=w[l]||[];
-    w[l].push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
-    var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),
-        dl=l!='dataLayer'?'&l='+l:'';
-    j.async=true;
-    j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-    f.parentNode.insertBefore(j,f);
-  })(window, document, 'script', 'dataLayer', gtm_id);
+function MMConsoleLog(content) {
+    var mmBadge = 'MM Shopify Pixel';
+    var style1 = "background: #8430ce; color: white; padding: 1px 3px; border-radius: 1px; margin-right: 10px;";
+    var style2 = "color: white; font-weight: bold;";
+    console.log(`%c${mmBadge}%c${content}`, style1, style2);
+}
 
 
-  // Função para garantir que o GA4 esteja carregado
-  function waitForGA4(callback, timeout = 5000) {
-      const start = Date.now();
-      const interval = setInterval(() => {
-          if (typeof gtag === 'function') {
-              MMConsoleLog('GA4 carregado.');          
-              clearInterval(interval);
-              callback();
-          } else if (Date.now() - start > timeout) {
-              clearInterval(interval);
-              MMConsoleLog('GA4 não carregado no tempo limite.');
-          }
-      }, 100);
-  }
-
-  // Função para disparar eventos do GA4
-  function sendToGA4(eventName, data) {
-    data.send_to = ga_id;
-    data.debug_mode = true;
-
-    MMConsoleLog('GA4 Event | ' + ga_id + ' | ' + eventName);
-    console.log(data);
-    
-    waitForGA4(() => {
-      gtag('event', eventName, data);
-    });
-  }
-
-  // Função para disparar eventos no Meta (Facebook)
-  function sendToMeta(eventName, data) {
-      const metaData = typeof data === 'object' ? {
-          content_type: 'product',
-          contents: data.items.map(item => ({
-              id: item.item_id,
-              quantity: item.quantity
-          })),
-          currency: 'BRL',
-          value: data.value || 0,
-          content_name: data.items[0]?.item_name,
-          content_category: data.items[0]?.item_category
-      } : data;
-
-      MMConsoleLog('Meta Event | ' + meta_id + ' | ' + eventName);
-      console.log(metaData);
-
-      fbq('track', eventName, metaData);
-  }
-
-
-  // Função para aguardar o carregamento do dataLayer
-  function waitForDataLayer(callback) {
-    if (window.dataLayer) {
-      MMConsoleLog('dataLayer carregado.');              
-      callback();
-    } else {        
-      setTimeout(() => waitForDataLayer(callback), 1000);
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+      var c = ca[i];
+      while (c.charAt(0)==' ') c = c.substring(1,c.length);
+      if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
     }
-  }
+    return null;
+}
 
-  function convertItems(event) {
-    return (event.data?.checkout?.lineItems || []).map(item => ({
-      item_id: item.product?.id?.toString() || '',
-      item_name: item.product?.title || item.product?.untranslatedTitle || 'Unknown',
-      price: parseFloat(item.price?.amount) || 0,
-      currency: item.price?.currencyCode || 'Unknown',
-      quantity: parseInt(item.quantity) || 1,
-      item_category: item.product?.type || 'Unknown',
-    }));
-  }
+// gtag.js load
+window.dataLayer = window.dataLayer || [];
+function gtag(){ dataLayer.push(arguments); }
+var mmGtagScript = document.createElement('script');
+mmGtagScript.async = true;
+mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
+document.head.appendChild(mmGtagScript);
+mmGtagScript.onload = function() {
+    MMConsoleLog('🟢 Google Tag ready');
+    gtag('js', new Date());
+    gtag('config', ga_id);
+};
 
-  // Disparado quando um usuário realiza uma busca no site
-  analytics.subscribe('search_submitted', event => {
-      let items = event.data.searchResult.productVariants.map(item => ({
-        item_id: item.product.id.toString(),
-        item_name: item.product.title || item.product.untranslatedTitle,
-        price: parseFloat(item.price.amount) || 0,
-        currency: item.price.currencyCode,
-        quantity: 1,
-        item_category: item.product.type || null,
-      }));
+// gtag.js load checker
+function waitForGA4(callback, timeout = 7000) {
+    const start = Date.now();
+    const interval = setInterval(() => {
+        if (typeof gtag === 'function') {
+            MMConsoleLog('🟢 gtag() ready');
+            clearInterval(interval);
+            callback();
+        } else if (Date.now() - start > timeout) {
+            clearInterval(interval);
+            MMConsoleLog('⚠️ gtag() not loaded (timeout)');
+        }
+    }, 100);
+}
 
-      let searchData = {
-        event: 'mymetric_view_search_results',
-        search_term: event.data.searchResult.query,
-        items: items || [],
-        fired_from: 'custom_pixel'
-      };
+// Meta Pixel load
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', meta_id);
+fbq('track', 'PageView');
+MMConsoleLog('🟢 Meta Pixel ready');
 
-      sendToGA4('view_search_results', searchData);
-      sendToMeta('Search', 'search_term: ' + event.data.searchResult.query);
-  });
+function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
+    const convertEvents = {
+        'search_submitted': {
+            'ga': 'search',
+            'meta': 'Search'
+        },
+        'collection_viewed': {
+            'ga': 'view_item_list'
+        },
+        'product_viewed': {
+            'ga': 'view_item',
+            'meta': 'ViewContent'
+        },
+        'product_added_to_cart': {
+            'ga': 'add_to_cart',
+            'meta': 'AddToCart'
+        },
+        'product_removed_from_cart': {
+            'ga': 'remove_from_cart'
+        },
+        'cart_viewed': {
+            'ga': 'view_cart'
+        },
+        'checkout_started': {
+            'ga': 'begin_checkout',
+            'meta': 'InitiateCheckout'
+        },
+        'checkout_shipping_info_submitted': {
+            'ga': 'add_shipping_info'
+        },
+        'payment_info_submitted': {
+            'ga': 'add_payment_info'
+        },
+        'checkout_completed': {
+            'ga': 'purchase',
+            'meta': 'Purchase'
+        }
+    }
 
+    const mmEmail = getCookie('mm_email') || null;
+    const mmPhone = getCookie('mm_phone') || null;
+
+    if(eventName in convertEvents) {
+        MMConsoleLog('🚩 [Shopify event] ' + eventName);
+        console.log(eventData);
+    }
+
+    // Função para disparar eventos no GA4
+    function sendToGA4(eventName, data) {
+        data.send_to = ga_id;
+        data.debug_mode = true;
+        gaEventName = convertEvents[eventName].ga;
+
+        MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
+        console.log(data);
+
+        waitForGA4(() => {
+            gtag('event', gaEventName, data);
+        });
+    }
+
+    // Função para disparar eventos no Meta Pixel (Facebook)
+    function sendToMeta(eventName, data) {
+        fbEventName = convertEvents[eventName].meta;
+        const metaData = typeof data === 'object' ? {
+            content_type: 'product',
+            contents: data.items.map(item => ({
+                id: item.item_id,
+                quantity: item.quantity
+            })),
+            currency: 'BRL',
+            value: data.value || 0,
+            content_name: data.items[0]?.item_name,
+            content_category: data.items[0]?.item_category,
+            em: data.email || mmEmail,
+            ph: data.phone || mmPhone
+        } : Object.fromEntries([ data.split(": ").map(item => item.trim()) ]);;
+
+        MMConsoleLog('🚀 [Meta Event] ' + meta_id + ' | ' + fbEventName);
+        console.log(metaData);
+
+        fbq('track', fbEventName, metaData);
+    }
+
+    // Disparado quando um usuário realiza uma busca no site
+    if (eventName === 'search_submitted') {
+
+        let items = eventData.searchResult.productVariants.map(item => ({
+            item_id: item.product.id.toString(),
+            item_name: item.product.title || item.product.untranslatedTitle,
+            price: parseFloat(item.price.amount) || 0,
+            currency: item.price.currencyCode,
+            quantity: 1,
+            item_category: item.product.type || null,
+        }));
+
+        let searchData = {
+            search_term: eventData.searchResult.query
+        };
+
+        sendToGA4(eventName, searchData);
+        sendToMeta(eventName, 'search_string: ' + eventData.searchResult.query);
+    };
+    
   // Disparado quando um usuário visualiza uma lista de produtos
-  analytics.subscribe('collection_viewed', event => {
-      let items = event.data.collection.productVariants.map(item => ({
-        item_id: item.product.id.toString(),
-        item_name: item.product.title || item.product.untranslatedTitle,
-        price: parseFloat(item.price.amount) || 0,
-        currency: item.price.currencyCode,
-        quantity: 1,
-        item_category: item.product.type || null,
-      }));
+    if (eventName === 'collection_viewed') {
+    
+        let items = eventData.collection.productVariants.map(item => ({
+            item_id: item.product.id.toString(),
+            item_name: item.product.title || item.product.untranslatedTitle,
+            price: parseFloat(item.price.amount) || 0,
+            currency: item.price.currencyCode,
+            quantity: 1,
+            item_category: item.product.type || null,
+        }));
 
-      let collectionData = {
+        let collectionData = {
         event: 'mymetric_view_item_list',
         ecommerce: {
-          item_list_name: event.data.collection.title,
-          items: items || [],
+            item_list_name: eventData.collection.title,
+            items: items || [],
         },
         fired_from: 'custom_pixel'
-      };
+        };
 
-      sendToGA4('view_item_list', collectionData.ecommerce);
-  });
+        sendToGA4(eventName, collectionData.ecommerce);
+    };    
 
-  // Disparado quando um usuário visualiza a página de um produto
-  analytics.subscribe("product_viewed", event => {
-      let items = [{
-        item_id: event.data.productVariant.product.id.toString(),
-        item_name: event.data.productVariant.product.title,
-        price: parseFloat(event.data.productVariant.price.amount),
-        currency: event.data.productVariant.price.currencyCode,
-        quantity: 1,
-        item_category: event.data.productVariant.product.type || null,
-      }];
+    // Disparado na visualização de um produto
+    if (eventName === 'product_viewed') {
+        let items = [{
+            item_id: eventData.productVariant.product.id.toString(),
+            item_name: eventData.productVariant.product.title,
+            price: parseFloat(eventData.productVariant.price.amount),
+            currency: eventData.productVariant.price.currencyCode,
+            quantity: 1,
+            item_category: eventData.productVariant.product.type || null,
+        }];
 
-      let productData = {
-        event: 'mymetric_view_item',
-        ecommerce: {
-          currency: event.data.productVariant.price.currencyCode,
-          value: event.data.productVariant.price.amount,
-          items: items || [],
-        },
-        fired_from: 'custom_pixel'
-      };
+        let productData = {
+            event: 'mymetric_view_item',
+            ecommerce: {
+                currency: eventData.productVariant.price.currencyCode,
+                value: eventData.productVariant.price.amount,
+                items: items || [],
+            },
+            fired_from: 'custom_pixel'
+        };
 
-      //window.dataLayer.push(productData);
-      sendToGA4('view_item', productData.ecommerce);
-      sendToMeta('ViewContent', productData.ecommerce);
-  });
+        sendToGA4(eventName, productData.ecommerce);
+        sendToMeta(eventName, productData.ecommerce);
+    }
 
+    // Disparado quando um produto é adicionado ao carrinho
+    if (eventName === 'product_added_to_cart') {
+        let items = [{
+            item_id: eventData.cartLine.merchandise.id.toString(),
+            item_name: eventData.cartLine.merchandise.product.title || eventData.cartLine.merchandise.product.untranslatedTitle,
+            price: parseFloat(eventData.cartLine.merchandise.price.amount),
+            currency: eventData.cartLine.merchandise.price.currencyCode,
+            quantity: eventData.cartLine.quantity,
+            item_category: eventData.cartLine.merchandise.product.type || null,
+        }];
 
-  // Disparado quando um produto é adicionado ao carrinho
-  analytics.subscribe("product_added_to_cart", event => {
-      let items = [{
-        item_id: event.data.cartLine.merchandise.id.toString(),
-        item_name: event.data.cartLine.merchandise.product.title || event.data.cartLine.merchandise.product.untranslatedTitle,
-        price: parseFloat(event.data.cartLine.merchandise.price.amount),
-        currency: event.data.cartLine.merchandise.price.currencyCode,
-        quantity: event.data.cartLine.quantity,
-        item_category: event.data.cartLine.merchandise.product.type || null,
-      }];
-
-      let cartData = {
+        let cartData = {
         event: 'mymetric_add_to_cart',
         ecommerce: {
-          currency: event.data.cartLine.cost.totalAmount.currencyCode,
-          value: parseFloat(event.data.cartLine.cost.totalAmount.amount) || 0,
-          items: items || [],
+            currency: eventData.cartLine.cost.totalAmount.currencyCode,
+            value: parseFloat(eventData.cartLine.cost.totalAmount.amount) || 0,
+            items: items || [],
         },
         fired_from: 'custom_pixel'
-      };
+        };
 
-      sendToGA4('add_to_cart', cartData.ecommerce);
-      sendToMeta('AddToCart', cartData.ecommerce);
-  });
+        sendToGA4(eventName, cartData.ecommerce);
+        sendToMeta(eventName, cartData.ecommerce);
+    };    
 
-  // Disparado quando um produto é removido do carrinho
-  analytics.subscribe("product_removed_from_cart", event => {
-      let items = [{
-        item_id: event.data.cartLine.merchandise.id.toString(),
-        item_name: event.data.cartLine.merchandise.product.title || event.data.cartLine.merchandise.product.untranslatedTitle,
-        price: parseFloat(event.data.cartLine.merchandise.price.amount),
-        currency: event.data.cartLine.merchandise.price.currencyCode,
-        quantity: event.data.cartLine.quantity,
-        item_category: event.data.cartLine.merchandise.product.type || null,
-      }];
+    // Disparado quando um produto é removido do carrinho
+    if (eventName === 'product_removed_from_cart') {
+        let items = [{
+            item_id: eventData.cartLine.merchandise.id.toString(),
+            item_name: eventData.cartLine.merchandise.product.title || eventData.cartLine.merchandise.product.untranslatedTitle,
+            price: parseFloat(eventData.cartLine.merchandise.price.amount),
+            currency: eventData.cartLine.merchandise.price.currencyCode,
+            quantity: eventData.cartLine.quantity,
+            item_category: eventData.cartLine.merchandise.product.type || null,
+        }];
 
-      let removeCartData = {
+        let removeCartData = {
         event: 'mymetric_remove_from_cart',
         ecommerce: {
-          items: items || [],
+            items: items || [],
         },
         fired_from: 'custom_pixel'
-      };
+        };
 
-      sendToGA4('remove_from_cart', removeCartData.ecommerce);
-      sendToMeta('RemoveFromCart', removeCartData.ecommerce);
-  });
+        sendToGA4(eventName, removeCartData.ecommerce);
+    };
 
-  // Disparado quando o usuário visualiza a página do carrinho de compras
-  analytics.subscribe('cart_viewed', event => {
-      let items = event.data.cart.lines.map(item => ({
-        item_id: item.merchandise.product.id.toString(),
-        item_name: item.merchandise.product.title || item.merchandise.product.untranslatedTitle,
-        price: parseFloat(item.merchandise.price.amount),
-        currency: item.merchandise.price.currencyCode,
-        quantity: parseInt(item.quantity) || 1,
-        item_category: item.merchandise.product.type || null,
-      }));
+    // Disparado quando o usuário visualiza a página do carrinho de compras
+    if (eventName === 'cart_viewed') {
+        let items = eventData.cart.lines.map(item => ({
+            item_id: item.merchandise.product.id.toString(),
+            item_name: item.merchandise.product.title || item.merchandise.product.untranslatedTitle,
+            price: parseFloat(item.merchandise.price.amount),
+            currency: item.merchandise.price.currencyCode,
+            quantity: parseInt(item.quantity) || 1,
+            item_category: item.merchandise.product.type || null,
+        }));
 
-      let cartViewData = {
+        let cartViewData = {
         event: 'mymetric_view_cart',
         ecommerce: {
-          currency: event.data.cart.cost.totalAmount.currencyCode,
-          value: parseFloat(event.data.cart.cost.totalAmount.amount) || 0,
-          items: items || [],
+            currency: eventData.cart.cost.totalAmount.currencyCode,
+            value: parseFloat(eventData.cart.cost.totalAmount.amount) || 0,
+            items: items || [],
         },
         fired_from: 'custom_pixel'
-      };
+        };
 
-      sendToGA4('view_cart', cartViewData.ecommerce);
-  });
+        sendToGA4(eventName, cartViewData.ecommerce);
+    };
 
-  // Disparado quando o usuário inicia o checkout
-  analytics.subscribe('checkout_started', event => {
-      let items = event.data.checkout.lineItems.map(item => ({
-          item_id: item.variant.product.id.toString(),
-          item_name: item.variant.product.title || item.merchandise.product.untranslatedTitle,
-          price: parseFloat(item.variant.price.amount),
-          currency: item.variant.price.currencyCode,
-          quantity: parseInt(item.quantity) || 1,
-          item_category: item.variant.product.type || null,
+    // Disparado quando o usuário inicia o checkout
+    if (eventName === 'checkout_started') {
+        let items = eventData.checkout.lineItems.map(item => ({
+            item_id: item.variant.product.id.toString(),
+            item_name: item.variant.product.title || item.merchandise.product.untranslatedTitle,
+            price: parseFloat(item.variant.price.amount),
+            currency: item.variant.price.currencyCode,
+            quantity: parseInt(item.quantity) || 1,
+            item_category: item.variant.product.type || null,
         }));
     
         let checkoutData = {
-          event: 'mymetric_checkout_started',
-          ecommerce: {
-              currency: event.data.checkout.totalPrice.currencyCode,
-              value: parseFloat(event.data.checkout.totalPrice.amount) || 0,
-              items: items || [],
-          },
-          fired_from: 'custom_pixel'
+            event: 'mymetric_checkout_started',
+            ecommerce: {
+                currency: eventData.checkout.totalPrice.currencyCode,
+                value: parseFloat(eventData.checkout.totalPrice.amount) || 0,
+                items: items || [],
+                email: eventData.checkout.email || null,
+                phone: eventData.checkout.phone || null
+            },
+            fired_from: 'custom_pixel'
         };
 
-      sendToGA4('begin_checkout', checkoutData.ecommerce);
-      sendToMeta('InitiateCheckout', checkoutData.ecommerce);
-  });
+        sendToGA4(eventName, checkoutData.ecommerce);
+        sendToMeta(eventName, checkoutData.ecommerce);
+    };
 
-  // Disparado quando o usuário informa os dados de entrega
-  analytics.subscribe('checkout_shipping_info_submitted', event => {
-        let items = event.data.checkout.lineItems.map(item => ({
+    // Disparado quando o usuário informa os dados de entrega
+    if (eventName === 'checkout_shipping_info_submitted') {
+        let items = eventData.checkout.lineItems.map(item => ({
             item_id: item.variant.product.id.toString(),
             item_name: item.variant.product.title || item.merchandise.product.untranslatedTitle,
             price: parseFloat(item.variant.price.amount),
             currency: item.variant.price.currencyCode,
             quantity: parseInt(item.quantity) || 1,
             item_category: item.variant.product.type || null,
-          }));
-      
-          let checkoutData = {
+        }));
+    
+        let checkoutData = {
             event: 'mymetric_checkout_shipping_info_submitted',
             ecommerce: {
-                currency: event.data.checkout.totalPrice.currencyCode,
-                value: parseFloat(event.data.checkout.totalPrice.amount) || 0,
+                currency: eventData.checkout.totalPrice.currencyCode,
+                value: parseFloat(eventData.checkout.totalPrice.amount) || 0,
                 items: items || [],
             },
             fired_from: 'custom_pixel'
-          };
-    
-        sendToGA4('add_shipping_info', checkoutData.ecommerce);
-    });
+        };
 
-  // Disparado quando o usuário informa os dados de pagamento
-  analytics.subscribe('payment_info_submitted', event => {
-        let items = event.data.checkout.lineItems.map(item => ({
+        sendToGA4(eventName, checkoutData.ecommerce);
+    };
+
+    // Disparado quando o usuário informa os dados de pagamento
+    if (eventName === 'payment_info_submitted') {
+        let items = eventData.checkout.lineItems.map(item => ({
             item_id: item.variant.product.id.toString(),
             item_name: item.variant.product.title || item.merchandise.product.untranslatedTitle,
             price: parseFloat(item.variant.price.amount),
             currency: item.variant.price.currencyCode,
             quantity: parseInt(item.quantity) || 1,
             item_category: item.variant.product.type || null,
-          }));
-      
-          let checkoutData = {
+        }));
+    
+        let checkoutData = {
             event: 'mymetric_payment_info_submitted',
             ecommerce: {
-                currency: event.data.checkout.totalPrice.currencyCode,
-                value: parseFloat(event.data.checkout.totalPrice.amount) || 0,
+                currency: eventData.checkout.totalPrice.currencyCode,
+                value: parseFloat(eventData.checkout.totalPrice.amount) || 0,
                 items: items || [],
             },
             fired_from: 'custom_pixel'
-          };
-    
-        sendToGA4('add_payment_info', checkoutData.ecommerce);
-        sendToMeta('AddPaymentInfo', checkoutData.ecommerce);
+        };
 
-    });  
+        sendToGA4(eventName, checkoutData.ecommerce);
+        sendToMeta(eventName, checkoutData.ecommerce);
 
-  // Disparado quando o usuário conclui uma transação
-  analytics.subscribe("checkout_completed", event => {
-      let discountApplications = event.data.checkout.discountApplications;
-      let titleCoupons = discountApplications.map(e => e.title).join(", ");
+    };  
 
-      let purchaseData = {
+    // Disparado quando o usuário conclui uma transação
+    if (eventName === 'checkout_completed') {
+        let discountApplications = eventData.checkout.discountApplications;
+        let titleCoupons = discountApplications.map(e => e.title).join(", ");
+
+        let purchaseData = {
         event: 'mymetric_purchase',
         ecommerce: {
-          currency: event.data.checkout.currencyCode,
-          value: event.data.checkout.totalPrice.amount,
-          coupon: titleCoupons || "",
-          items: convertItems(event) || [],
-          transaction_id: event.data.checkout.order.id,
-          tax: parseFloat(event.data.checkout.totalTax.amount) || 0,
-          shipping: parseFloat(event.data.checkout.shippingLine.price.amount) || 0
+            currency: eventData.checkout.currencyCode,
+            value: eventData.checkout.totalPrice.amount,
+            coupon: titleCoupons || "",
+            items: convertItems(event) || [],
+            transaction_id: eventData.checkout.order.id,
+            tax: parseFloat(eventData.checkout.totalTax.amount) || 0,
+            shipping: parseFloat(eventData.checkout.shippingLine.price.amount) || 0
         },
-        user_email: event.data.checkout.email,
+        user_email: eventData.checkout.email,
         fired_from: 'custom_pixel',
-      };
+        };
 
-      sendToGA4('purchase', purchaseData.ecommerce);
-      sendToMeta('Purchase', purchaseData.ecommerce);
-  });
+        //sendToGA4(eventName, purchaseData.ecommerce);
+        //sendToMeta(eventName, purchaseData.ecommerce);
+    };    
 
 }
