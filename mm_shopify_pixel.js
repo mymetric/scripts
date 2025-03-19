@@ -1,5 +1,12 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.0');
+MMConsoleLog('🟢 Pixel ready - v2.1.2');
+
+if (typeof window.analytics_tools_ids  !== 'undefined') {
+    var ga_id = window.analytics_tools_ids .ga;
+    var meta_id = window.analytics_tools_ids .meta;
+} else {
+    MMConsoleLog("⚠️ endpointsIds não definido!");
+}
 
 function MMConsoleLog(content) {
     var mmBadge = 'MM Shopify Pixel';
