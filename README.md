@@ -89,11 +89,8 @@ window.analytics_tools_ids = {
   meta: '9999999999999'
 };
 
-const version = 'v1.51'
-console.log('####### ' + version);
-
 var mmtr = document.createElement("script");
-mmtr.src = "https://spart.digital/sandbox/mymetric/mm-tracker.js";
+mmtr.src = "[https://spart.digital/sandbox/mymetric/mm-tracker.js](https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js)";
 document.head.appendChild(mmtr);
 
 mmtr.onload = function() {
