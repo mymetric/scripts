@@ -90,7 +90,7 @@ window.analytics_tools_ids = {
 };
 
 var mmtr = document.createElement("script");
-mmtr.src = "[https://spart.digital/sandbox/mymetric/mm-tracker.js](https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js)";
+mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js";
 document.head.appendChild(mmtr);
 
 mmtr.onload = function() {
