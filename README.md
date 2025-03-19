@@ -84,27 +84,23 @@ var phoneRequired = true;
 
 ```javascript
 // atualizar os IDs de Google Tag e Meta Pixel
-ga_id = 'G-XXXXXXXXXX';
-meta_id = '9999999999999';
+window.analytics_tools_ids = {
+  ga: 'G-XXXXXXXXXX',
+  meta: '9999999999999'
+};
 
-const version = 'v1.47'
-console.log('####### ' + version); 
+const version = 'v1.51'
+console.log('####### ' + version);
 
 var mmtr = document.createElement("script");
-mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js";
+mmtr.src = "https://spart.digital/sandbox/mymetric/mm-tracker.js";
 document.head.appendChild(mmtr);
 
 mmtr.onload = function() {
-   
-    analytics.subscribe('all_events', (event) => {      
-     
-      const eventName = event.name;
-      const eventData = event.data;
-
-      mmShopifyPixel(ga_id, meta_id, eventName, eventData);
-      
+    analytics.subscribe('all_events', (event) => {
+        const eventName = event.name;
+        const eventData = event.data;
+        mmShopifyPixel(window.analytics_tools_ids.ga, window.analytics_tools_ids.meta, eventName, eventData);
     });
-
 };
-
 ```
