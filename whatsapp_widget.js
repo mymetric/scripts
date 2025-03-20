@@ -613,7 +613,10 @@ function createFormGroup(id, config) {
 // Função para enviar eventos para o Google Analytics
 function sendGAEvent(eventName, eventParams = {}) {
     if (typeof gtag === 'function' && window.widgetConfig.analytics?.measurementId) {
-        gtag('event', eventName, {
+        const slug = window.widgetConfig.analytics.slug || '';
+        const fullEventName = slug ? `${slug}_whatsapp_widget_${eventName}` : `whatsapp_widget_${eventName}`;
+        
+        gtag('event', fullEventName, {
             ...eventParams,
             send_to: window.widgetConfig.analytics.measurementId
         });
@@ -655,7 +658,7 @@ function initWhatsAppWidget(config) {
             if (urlParams.get('mm_widget') === '1') {
                 popupOverlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
-                sendGAEvent('whatsapp_widget_opened');
+                sendGAEvent('opened');
             }
             break;
     }
@@ -676,7 +679,7 @@ function initWhatsAppWidget(config) {
             e.preventDefault();
             popupOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
-            sendGAEvent('whatsapp_widget_opened');
+            sendGAEvent('opened');
         });
     }
 
@@ -685,7 +688,7 @@ function initWhatsAppWidget(config) {
         closeBtn.addEventListener('click', () => {
             popupOverlay.classList.remove('active');
             document.body.style.overflow = '';
-            sendGAEvent('whatsapp_widget_closed');
+            sendGAEvent('closed');
         });
     }
 
@@ -694,7 +697,7 @@ function initWhatsAppWidget(config) {
         if (e.target === popupOverlay) {
             popupOverlay.classList.remove('active');
             document.body.style.overflow = '';
-            sendGAEvent('whatsapp_widget_closed');
+            sendGAEvent('closed');
         }
     });
 
@@ -703,7 +706,7 @@ function initWhatsAppWidget(config) {
         if (e.key === 'Escape' && popupOverlay.classList.contains('active')) {
             popupOverlay.classList.remove('active');
             document.body.style.overflow = '';
-            sendGAEvent('whatsapp_widget_closed');
+            sendGAEvent('closed');
         }
     });
 
@@ -712,7 +715,7 @@ function initWhatsAppWidget(config) {
     contactForm.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', () => {
             if (input.value.trim()) {
-                sendGAEvent(`whatsapp_widget_field_${input.id}`);
+                sendGAEvent(`field_${input.id}`);
             }
         });
     });
@@ -738,14 +741,17 @@ function initWhatsAppWidget(config) {
             const response = await fetch(config.webhook.url, {
                 method: config.webhook.method,
                 headers: config.webhook.headers,
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    event_name: `${config.analytics.slug}_whatsapp_widget`,
+                    event_params: formData
+                })
             });
 
             if (!response.ok) throw new Error('Erro ao enviar dados para o endpoint');
 
             contactForm.reset();
             popupOverlay.classList.remove('active');
-            sendGAEvent('whatsapp_widget_completed');
+            sendGAEvent('completed', formData);
             
             // Abrir WhatsApp após envio bem-sucedido
             window.open(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`, '_blank');
