@@ -459,11 +459,11 @@ function createSVG(path, viewBox = "0 0 24 24") {
 }
 
 // Função para criar o botão do WhatsApp
-function createWhatsAppButton() {
+function createWhatsAppButton(config) {
     const button = document.createElement('a');
     button.id = 'whatsappBtn';
     button.className = 'whatsapp-link';
-    button.href = 'https://wa.me/5531992251502';
+    button.href = `https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`;
     button.target = '_blank';
     
     const whatsappIcon = createSVG("M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.287.129.332.202.045.073.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 1.856.001 3.598.723 4.907 2.034 1.31 1.311 2.031 3.054 2.03 4.908-.001 3.825-3.113 6.938-6.937 6.938z");
@@ -622,10 +622,44 @@ function sendGAEvent(eventName, eventParams = {}) {
 
 // Função para inicializar o widget
 function initWhatsAppWidget(config) {
-    // Criar e adicionar o popup
-    const popupOverlay = createPopup(config);
+    let popupOverlay = null;
+    let whatsappButton = null;
+
+    // Criar o popup
+    popupOverlay = createPopup(config);
     document.body.appendChild(popupOverlay);
-    
+
+    // Configurar o botão do WhatsApp baseado no modo de inicialização
+    switch (config.initialization.mode) {
+        case 'button':
+            // Criar e adicionar o botão do WhatsApp
+            if (config.initialization.createButton) {
+                whatsappButton = createWhatsAppButton(config);
+                document.body.appendChild(whatsappButton);
+            }
+            break;
+
+        case 'trigger':
+            // Usar botão existente
+            whatsappButton = document.querySelector(config.initialization.buttonSelector);
+            if (!whatsappButton) {
+                console.warn('Botão do WhatsApp não encontrado com o seletor:', config.initialization.buttonSelector);
+                return { popupOverlay };
+            }
+            break;
+
+        case 'auto':
+        default:
+            // Verificar parâmetros da URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mm_widget') === '1') {
+                popupOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                sendGAEvent('whatsapp_widget_opened');
+            }
+            break;
+    }
+
     // Adicionar evento de máscara ao campo de telefone
     if (config.fields.phone.enabled) {
         const phoneInput = document.getElementById('phone');
@@ -637,9 +671,8 @@ function initWhatsAppWidget(config) {
     }
 
     // Adicionar eventos aos botões
-    const whatsappBtn = document.getElementById('whatsappBtn');
-    if (whatsappBtn) {
-        whatsappBtn.addEventListener('click', (e) => {
+    if (whatsappButton) {
+        whatsappButton.addEventListener('click', (e) => {
             e.preventDefault();
             popupOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -713,6 +746,10 @@ function initWhatsAppWidget(config) {
             contactForm.reset();
             popupOverlay.classList.remove('active');
             sendGAEvent('whatsapp_widget_completed');
+            
+            // Abrir WhatsApp após envio bem-sucedido
+            window.open(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`, '_blank');
+            
             alert('Mensagem enviada com sucesso!');
         } catch (error) {
             console.error('Erro:', error);
@@ -733,17 +770,8 @@ function initWidget(config) {
     // Inicializar o widget
     const { popupOverlay } = initWhatsAppWidget(config);
 
-    // Verificar parâmetros da URL
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Abrir popup se o parâmetro mm_widget=1 estiver presente
-    if (urlParams.get('mm_widget') === '1') {
-        popupOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        sendGAEvent('whatsapp_widget_opened');
-    }
-
     // Preencher dados de teste se necessário
+    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('test_data') === '1') {
         fillTestData();
     }
