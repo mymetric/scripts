@@ -749,10 +749,7 @@ function initWidget(config) {
     }
 }
 
-// Expor funções globalmente
-window.initWidget = initWidget;
-window.injectStyles = injectStyles;
-window.initWhatsAppWidget = initWhatsAppWidget;
-window.sendGAEvent = sendGAEvent;
-window.fillTestData = fillTestData;
-window.getMMTracker = getMMTracker; 
+// Expor apenas a função initWidget globalmente
+(function(window) {
+    window.initWidget = initWidget;
+})(window); 
