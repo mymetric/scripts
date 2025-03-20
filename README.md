@@ -83,21 +83,24 @@ var phoneRequired = true;
 ## MyMetric Shopify Pixel
 
 ```javascript
-// atualizar os IDs de Google Tag e Meta Pixel
-window.analytics_tools_ids = {
-  ga: 'G-XXXXXXXXXX',
-  meta: '9999999999999'
-};
-
-var mmtr = document.createElement("script");
-mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js";
-document.head.appendChild(mmtr);
-
-mmtr.onload = function() {
-    analytics.subscribe('all_events', (event) => {
-        const eventName = event.name;
-        const eventData = event.data;
-        mmShopifyPixel(window.analytics_tools_ids.ga, window.analytics_tools_ids.meta, eventName, eventData);
-    });
-};
+  // atualizar os IDs de Google Tag e Meta Pixel
+  window.analytics_tools_ids = {
+    ga: 'G-XXXXXXXXX',
+    meta: [
+      '9999999999999999',
+      '8888888888888888'
+    ]
+  };
+  
+  var mmtr = document.createElement("script");
+  mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mm_shopify_pixel.js";
+  document.head.appendChild(mmtr);
+  
+  mmtr.onload = function() {
+      analytics.subscribe('all_events', (event) => {
+          const eventName = event.name;
+          const eventData = event.data;
+          mmShopifyPixel(window.analytics_tools_ids.ga, window.analytics_tools_ids.meta, eventName, eventData);
+      });
+  };
 ```
