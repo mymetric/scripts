@@ -1,11 +1,11 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.1.2');
+MMConsoleLog('🟢 Pixel ready - v2.1.3');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
-    var ga_id = window.analytics_tools_ids .ga;
-    var meta_id = window.analytics_tools_ids .meta;
+    var ga_id = window.analytics_tools_ids.ga;
+    var meta_id = window.analytics_tools_ids.meta;
 } else {
-    MMConsoleLog("⚠️ endpointsIds não definido!");
+    MMConsoleLog("⚠️ analytics_tools_ids não definido!");
 }
 
 function MMConsoleLog(content) {
@@ -64,9 +64,13 @@ n.queue=[];t=b.createElement(e);t.async=!0;
 t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', meta_id);
+
+
+for (let i = 0; i < meta_id.length; i++) {
+    fbq('init', meta_id[i]);
+    MMConsoleLog('🟢 Meta Pixel ready | ' + meta_id[i]);
+}
 fbq('track', 'PageView');
-MMConsoleLog('🟢 Meta Pixel ready');
 
 function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
@@ -145,12 +149,16 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
             content_category: data.items[0]?.item_category,
             em: data.email || mmEmail,
             ph: data.phone || mmPhone
-        } : Object.fromEntries([ data.split(": ").map(item => item.trim()) ]);;
-
-        MMConsoleLog('🚀 [Meta Event] ' + meta_id + ' | ' + fbEventName);
-        console.log(metaData);
+        } : Object.fromEntries([ data.split(": ").map(item => item.trim()) ]);
 
         fbq('track', fbEventName, metaData);
+
+        for (let i = 0; i < meta_id.length; i++) {
+            MMConsoleLog('🚀 [Meta Event] ' + meta_id[i] + ' | ' + fbEventName);
+        }
+
+        console.log(metaData);
+
     }
 
     // Disparado quando um usuário realiza uma busca no site
