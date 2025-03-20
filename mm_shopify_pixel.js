@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.1.3');
+MMConsoleLog('🟢 Pixel ready - v2.1.4');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -9,7 +9,7 @@ if (typeof window.analytics_tools_ids  !== 'undefined') {
 }
 
 function MMConsoleLog(content) {
-    var mmBadge = 'MM Shopify Pixel';
+    var mmBadge = 'MyMetric Shopify Pixel';
     var style1 = "background: #8430ce; color: white; padding: 1px 3px; border-radius: 1px; margin-right: 10px;";
     var style2 = "color: white; font-weight: bold;";
     console.log(`%c${mmBadge}%c${content}`, style1, style2);
