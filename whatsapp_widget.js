@@ -53,7 +53,7 @@ const widgetStyles = `
     }
 
     .popup-overlay.active {
-        display: flex;
+        display: flex !important;
         opacity: 1;
     }
 
@@ -77,7 +77,7 @@ const widgetStyles = `
     }
 
     .popup-overlay.active .popup-content {
-        transform: translateY(0);
+        transform: translateY(0) !important;
     }
 
     /* Header do Popup */
@@ -610,27 +610,6 @@ function createFormGroup(id, config) {
     return group;
 }
 
-// Função para inicializar o widget
-function initWhatsAppWidget(config = window.widgetConfig) {
-    // Criar e adicionar o botão do WhatsApp
-    const whatsappBtn = createWhatsAppButton();
-    document.body.appendChild(whatsappBtn);
-    
-    // Criar e adicionar o popup
-    const popupOverlay = createPopup(config);
-    document.body.appendChild(popupOverlay);
-    
-    // Adicionar evento de máscara ao campo de telefone
-    if (config.fields.phone.enabled) {
-        const phoneInput = document.getElementById('phone');
-        phoneInput.addEventListener('input', (e) => {
-            applyPhoneMask(e.target);
-        });
-    }
-    
-    return { whatsappBtn, popupOverlay };
-}
-
 // Função para enviar eventos para o Google Analytics
 function sendGAEvent(eventName, eventParams = {}) {
     if (typeof gtag === 'function' && window.widgetConfig.analytics?.measurementId) {
@@ -641,86 +620,66 @@ function sendGAEvent(eventName, eventParams = {}) {
     }
 }
 
-// Função para verificar se todos os campos obrigatórios foram preenchidos
-function checkFieldsFilled() {
-    const fields = window.widgetConfig.fields;
-    let allFilled = true;
+// Função para inicializar o widget
+function initWhatsAppWidget(config) {
+    // Criar e adicionar o popup
+    const popupOverlay = createPopup(config);
+    document.body.appendChild(popupOverlay);
     
-    Object.keys(fields).forEach(field => {
-        if (fields[field].enabled && fields[field].required) {
-            const input = document.getElementById(field);
-            if (!input || !input.value.trim()) {
-                allFilled = false;
-            }
+    // Adicionar evento de máscara ao campo de telefone
+    if (config.fields.phone.enabled) {
+        const phoneInput = document.getElementById('phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', (e) => {
+                applyPhoneMask(e.target);
+            });
         }
-    });
-    
-    return allFilled;
-}
+    }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Injetar estilos com a configuração
-    injectStyles(window.widgetConfig);
-
-    // Inicializar o widget
-    const { whatsappBtn, popupOverlay } = initWhatsAppWidget(window.widgetConfig);
-    const contactForm = document.getElementById('contactForm');
-    const closeBtn = document.getElementById('closeBtn');
-
-    // Verificar parâmetros da URL
-    const urlParams = checkUrlParameters();
-
-    // Abrir popup se o parâmetro mm_widget=1 estiver presente na URL
-    if (urlParams.widget) {
-        setTimeout(() => {
+    // Adicionar eventos aos botões
+    const whatsappBtn = document.getElementById('whatsappBtn');
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             popupOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
             sendGAEvent('whatsapp_widget_opened');
-        }, 100);
+        });
     }
 
-    // Preencher dados de teste se o parâmetro test_data=1 estiver presente
-    if (urlParams.test) {
-        setTimeout(() => {
-            fillTestData();
-        }, 100);
+    const closeBtn = document.getElementById('closeBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            popupOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            sendGAEvent('whatsapp_widget_closed');
+        });
     }
 
-    // Abrir popup ao clicar no botão do WhatsApp
-    whatsappBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        popupOverlay.classList.add('active');
-        sendGAEvent('whatsapp_widget_opened');
-    });
-
-    // Fechar popup ao clicar no botão de fechar
-    closeBtn.addEventListener('click', () => {
-        popupOverlay.classList.remove('active');
-        sendGAEvent('whatsapp_widget_closed');
-    });
-
-    // Fechar popup ao clicar fora dele
+    // Adicionar evento de clique no overlay para fechar
     popupOverlay.addEventListener('click', (e) => {
         if (e.target === popupOverlay) {
             popupOverlay.classList.remove('active');
+            document.body.style.overflow = '';
             sendGAEvent('whatsapp_widget_closed');
         }
     });
 
-    // Fechar popup com a tecla ESC
+    // Fechar com ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && popupOverlay.classList.contains('active')) {
             popupOverlay.classList.remove('active');
+            document.body.style.overflow = '';
             sendGAEvent('whatsapp_widget_closed');
         }
     });
 
-    // Monitorar preenchimento dos campos
-    const formInputs = contactForm.querySelectorAll('input');
-    formInputs.forEach(input => {
+    // Monitorar campos do formulário
+    const contactForm = document.getElementById('contactForm');
+    contactForm.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', () => {
-            const fieldName = input.id;
             if (input.value.trim()) {
-                sendGAEvent(`whatsapp_widget_field_${fieldName}`);
+                sendGAEvent(`whatsapp_widget_field_${input.id}`);
             }
         });
     });
@@ -728,44 +687,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Manipular envio do formulário
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const submitBtn = contactForm.querySelector('.submit-btn');
         submitBtn.classList.add('loading');
 
         const formData = {};
-        Object.keys(window.widgetConfig.fields).forEach(field => {
-            if (window.widgetConfig.fields[field].enabled) {
+        Object.keys(config.fields).forEach(field => {
+            if (config.fields[field].enabled) {
                 const input = document.getElementById(field);
                 formData[field] = field === 'phone' ? input.value.replace(/\D/g, '') : input.value;
             }
         });
 
-        // Adicionar o mm_tracker aos dados
         const mmTracker = getMMTracker();
-        if (mmTracker) {
-            formData.mm_tracker = mmTracker;
-        }
+        if (mmTracker) formData.mm_tracker = mmTracker;
 
         try {
-            // Enviar dados para o endpoint
-            const response = await fetch(window.widgetConfig.webhook.url, {
-                method: window.widgetConfig.webhook.method,
-                headers: window.widgetConfig.webhook.headers,
+            const response = await fetch(config.webhook.url, {
+                method: config.webhook.method,
+                headers: config.webhook.headers,
                 body: JSON.stringify(formData)
             });
 
-            if (!response.ok) {
-                throw new Error('Erro ao enviar dados para o endpoint');
-            }
+            if (!response.ok) throw new Error('Erro ao enviar dados para o endpoint');
 
-            // Limpar formulário e fechar popup
             contactForm.reset();
             popupOverlay.classList.remove('active');
-
-            // Enviar evento de conclusão
             sendGAEvent('whatsapp_widget_completed');
-
-            // Mostrar mensagem de sucesso
             alert('Mensagem enviada com sucesso!');
         } catch (error) {
             console.error('Erro:', error);
@@ -774,4 +721,38 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.classList.remove('loading');
         }
     });
-}); 
+    
+    return { popupOverlay };
+}
+
+// Função principal que encapsula todo o código
+function initWidget(config) {
+    // Injetar estilos
+    injectStyles(config);
+
+    // Inicializar o widget
+    const { popupOverlay } = initWhatsAppWidget(config);
+
+    // Verificar parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Abrir popup se o parâmetro mm_widget=1 estiver presente
+    if (urlParams.get('mm_widget') === '1') {
+        popupOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        sendGAEvent('whatsapp_widget_opened');
+    }
+
+    // Preencher dados de teste se necessário
+    if (urlParams.get('test_data') === '1') {
+        fillTestData();
+    }
+}
+
+// Expor funções globalmente
+window.initWidget = initWidget;
+window.injectStyles = injectStyles;
+window.initWhatsAppWidget = initWhatsAppWidget;
+window.sendGAEvent = sendGAEvent;
+window.fillTestData = fillTestData;
+window.getMMTracker = getMMTracker; 
