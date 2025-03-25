@@ -16,9 +16,10 @@ O WhatsApp Widget é uma solução flexível que permite adicionar um botão de 
             message: 'Mensagem padrão do WhatsApp'
         },
         initialization: {
-            mode: 'auto', // 'auto' | 'button' | 'trigger'
+            mode: 'button', // 'button' | 'trigger'
             buttonSelector: '#whatsappBtn', // Seletor do botão existente (usado quando mode é 'trigger')
-            createButton: true // Se deve criar o botão (usado quando mode é 'button')
+            createButton: true, // Se deve criar o botão (usado quando mode é 'button')
+            openSelector: '[data-whatsapp-widget="open"]' // Seletor CSS para elementos que devem abrir o popup
         },
         colors: {
             primary: { gradient: 'linear-gradient(135deg, #FF3300, #E62E00)', solid: '#FF3300', hover: '#E62E00' },
@@ -73,17 +74,7 @@ O WhatsApp Widget é uma solução flexível que permite adicionar um botão de 
 
 ## Modos de Inicialização
 
-### 1. Modo Automático (`auto`)
-```javascript
-initialization: {
-    mode: 'auto'
-}
-```
-- O popup é criado mas não é adicionado nenhum botão
-- O popup abre automaticamente se o parâmetro `mm_widget=1` estiver presente na URL
-- Útil para integrações onde você quer controlar quando o popup abre via URL
-
-### 2. Modo Botão (`button`)
+### 1. Modo Botão (`button`)
 ```javascript
 initialization: {
     mode: 'button',
@@ -94,7 +85,7 @@ initialization: {
 - O popup abre quando o botão é clicado
 - Útil quando você quer que o widget crie seu próprio botão
 
-### 3. Modo Trigger (`trigger`)
+### 2. Modo Trigger (`trigger`)
 ```javascript
 initialization: {
     mode: 'trigger',
@@ -104,6 +95,35 @@ initialization: {
 - Usa um botão existente na página
 - O popup abre quando o botão existente é clicado
 - Útil quando você já tem um botão na página e quer apenas adicionar a funcionalidade do popup
+
+### Abrindo o Popup via Seletor CSS
+Você pode configurar um seletor CSS para abrir o popup e prevenir o comportamento padrão dos elementos. Para isso, adicione a propriedade `openSelector` na configuração de inicialização:
+
+```javascript
+initialization: {
+    mode: 'button',
+    createButton: true,
+    openSelector: '[data-whatsapp-widget="open"]' // Seletor CSS personalizado
+}
+```
+
+E adicione o atributo correspondente aos elementos desejados:
+
+```html
+<!-- Exemplo com link -->
+<a href="#" data-whatsapp-widget="open">Fale Conosco</a>
+
+<!-- Exemplo com botão -->
+<button data-whatsapp-widget="open">Iniciar Conversa</button>
+```
+
+O widget irá automaticamente:
+- Prevenir o comportamento padrão dos elementos que correspondem ao seletor
+- Abrir o popup quando os elementos forem clicados
+- Enviar o evento de abertura para o Google Analytics
+
+### Comportamento do Parâmetro mm_widget
+Independentemente do modo de inicialização escolhido, o popup será aberto automaticamente se o parâmetro `mm_widget=1` estiver presente na URL. Isso permite que você controle a abertura do popup via URL mesmo quando usando os modos `button` ou `trigger`.
 
 ## Personalização
 
