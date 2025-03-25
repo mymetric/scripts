@@ -3,7 +3,6 @@ const widgetStyles = `
     /* Estilos Gerais */
     body {
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     /* Botão do WhatsApp */
