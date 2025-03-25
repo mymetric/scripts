@@ -644,8 +644,10 @@ function initWhatsAppWidget(config) {
         if (config.selector && config.selector.enabled) {
             const targetElement = document.querySelector(config.selector.target);
             if (targetElement) {
+                // Prevenir o comportamento padrão do link do WhatsApp
                 targetElement.addEventListener('click', (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     popupOverlay.classList.add('active');
                     document.body.style.overflow = 'hidden';
                     sendGAEvent('opened');
