@@ -63,7 +63,7 @@ O WhatsApp Widget é uma solução flexível que permite adicionar um botão de 
     
     // Carregar o script dinamicamente
     var script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/gh/mymetric/scripts@a41d89667ac2f1b542e0f3dbba54457fe33b047b/whatsapp_widget.js';
+    script.src = 'https://cdn.jsdelivr.net/gh/mymetric/scripts@a41d89667ac2f1b542e0f3dbba54457fe33b047b/whatsapp_widget/script.js';
     
     script.onload = function () {
         window.initWidget(widgetConfig);
