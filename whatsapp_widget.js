@@ -631,6 +631,26 @@ function initWhatsAppWidget(config) {
     popupOverlay = createPopup(config);
     document.body.appendChild(popupOverlay);
 
+    // Verificar parâmetros da URL e abrir popup se mm_widget estiver presente
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mm_widget') === '1') {
+        popupOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        sendGAEvent('opened');
+    }
+
+    // Adicionar eventos aos elementos que correspondem ao seletor configurado
+    if (config.initialization.openSelector) {
+        document.querySelectorAll(config.initialization.openSelector).forEach(element => {
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                popupOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                sendGAEvent('opened');
+            });
+        });
+    }
+
     // Configurar o botão do WhatsApp baseado no modo de inicialização
     switch (config.initialization.mode) {
         case 'button':
@@ -647,17 +667,6 @@ function initWhatsAppWidget(config) {
             if (!whatsappButton) {
                 console.warn('Botão do WhatsApp não encontrado com o seletor:', config.initialization.buttonSelector);
                 return { popupOverlay };
-            }
-            break;
-
-        case 'auto':
-        default:
-            // Verificar parâmetros da URL
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('mm_widget') === '1') {
-                popupOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                sendGAEvent('opened');
             }
             break;
     }
