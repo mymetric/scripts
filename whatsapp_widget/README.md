@@ -13,7 +13,7 @@ O WhatsApp Widget é uma solução flexível que permite adicionar um botão de 
         title: 'Atendimento',
         whatsapp: {
             number: 'SEU_NUMERO_AQUI', // Ex: '5531992251502'
-            message: 'Mensagem padrão do WhatsApp'
+            message: 'Mensagem padrão do WhatsApp. Meu email é ||email||.' // É possível acrescentar o email na mensagem com a variável ||email||
         },
         initialization: {
             mode: 'button', // 'button' | 'trigger'
