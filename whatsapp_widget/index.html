@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Widget</title>
+    <title>WhatsApp Widget 2</title>
     <style>
         .test-button {
             position: fixed;
@@ -33,14 +33,15 @@
         // Configuração do widget
         var widgetConfig = {
             title: 'Atendimento',
-            selector: {
-                enabled: true,
-                target: 'a[href*="wa.me"]',
-                position: 'bottom-right'
-            },
             whatsapp: {
-                number: '5511978675244',
-                message: 'Olá! Gostaria de mais informações.'
+                number: '5511978675244', // Ex: '5531992251502'
+                message: 'Olá! Gostaria de mais informações. Meu email é: ||email||'
+            },
+            : {
+                mode: 'trigger', // 'button' | 'trigger'
+                buttonSelector: 'a[href*="wa.me"]', // Seletor do botão existente (usado quando mode é 'trigger')
+                // createButton: true, // Se deve criar o botão (usado quando mode é 'button')
+                // openSelector: '[data-whatsapp-widget="open"]' // Seletor CSS para elementos que devem abrir o popup
             },
             colors: {
                 primary: { gradient: 'linear-gradient(135deg, #FFD700, #FFA500)', solid: '#FFD700', hover: '#FFA500' },
@@ -73,13 +74,12 @@
                 url: 'https://mymetric-hub-shopify.ue.r.appspot.com/',
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Gtm-Server-Preview': 'ZW52LTh8LWhwLTZLZ3JUc1BNMkdublhyMFA3Z3wxOTViMDY3NDdmNmJlMjcyZTY4NjQ='
+                    'Content-Type': 'application/json'
                 }
             },
             analytics: { 
                 measurementId: 'G-6QW544HMMQ',
-                slug: 'oculos-shop'
+                slug: 'oculos-shop' // Ex: 'gringa'
             }
         };
     
