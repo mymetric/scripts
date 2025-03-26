@@ -667,12 +667,23 @@ function initWhatsAppWidget(config) {
                     break;
 
                 case 'trigger':
-                    // Usar botão existente
-                    whatsappButton = document.querySelector(config.initialization.buttonSelector);
-                    if (!whatsappButton) {
-                        console.warn('Botão do WhatsApp não encontrado com o seletor:', config.initialization.buttonSelector);
+                    // Usar botões existentes
+                    const buttons = document.querySelectorAll(config.initialization.buttonSelector);
+                    if (buttons.length === 0) {
+                        console.warn('Nenhum botão do WhatsApp encontrado com o seletor:', config.initialization.buttonSelector);
                         return { popupOverlay };
                     }
+                    // Adicionar evento de clique em todos os botões encontrados
+                    buttons.forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            popupOverlay.classList.add('active');
+                            document.body.style.overflow = 'hidden';
+                            sendGAEvent('opened');
+                        });
+                    });
+                    // Armazenar o primeiro botão para referência futura
+                    whatsappButton = buttons[0];
                     break;
             }
         }
@@ -767,9 +778,18 @@ function initWhatsAppWidget(config) {
                     contactForm.reset();
                     popupOverlay.classList.remove('active');
                     sendGAEvent('completed', formData);
+                    fbq('track', 'Lead');
                     
                     // Abrir WhatsApp após envio bem-sucedido
-                    window.open(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`, '_blank');
+                    let whatsappMessage = config.whatsapp.message;
+                    
+                    // Verifica se o campo email existe e está habilitado
+                    if (config.fields.email?.enabled && formData.email) {
+                        // Substitui o marcador ||email|| pelo email do usuário
+                        whatsappMessage = whatsappMessage.replace(/\|\|email\|\|/g, formData.email);
+                    }
+                    
+                    window.open(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
                     
                     alert('Mensagem enviada com sucesso!');
                 } catch (error) {
