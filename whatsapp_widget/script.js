@@ -677,10 +677,13 @@ function initWhatsAppWidget(config) {
                     buttons.forEach(button => {
                         button.addEventListener('click', (e) => {
                             e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
                             popupOverlay.classList.add('active');
                             document.body.style.overflow = 'hidden';
                             sendGAEvent('opened');
-                        });
+                            return false;
+                        }, true); // Usando capture phase
                     });
                     // Armazenar o primeiro botão para referência futura
                     whatsappButton = buttons[0];
@@ -696,16 +699,6 @@ function initWhatsAppWidget(config) {
                     applyPhoneMask(e.target);
                 });
             }
-        }
-
-        // Adicionar eventos aos botões
-        if (whatsappButton) {
-            whatsappButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                popupOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                sendGAEvent('opened');
-            });
         }
 
         const closeBtn = document.getElementById('closeBtn');
@@ -790,11 +783,8 @@ function initWhatsAppWidget(config) {
                     }
                     
                     window.open(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
-                    
-                    alert('Mensagem enviada com sucesso!');
                 } catch (error) {
                     console.error('Erro:', error);
-                    alert('Erro ao enviar mensagem. Por favor, tente novamente.');
                 } finally {
                     submitBtn.classList.remove('loading');
                 }
