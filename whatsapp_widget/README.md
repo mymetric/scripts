@@ -16,7 +16,7 @@ O WhatsApp Widget é uma solução flexível que permite adicionar um botão de 
             message: 'Mensagem padrão do WhatsApp. Meu email é ||email||.' // É possível acrescentar o email na mensagem com a variável ||email||
         },
         initialization: {
-            mode: 'button', // 'button' | 'trigger'
+            mode: ['button', 'trigger'], // Uma lista com uma ou mais opções disponveis 'button' e 'trigger'
             buttonSelector: '#whatsappBtn', // Seletor do botão existente (usado quando mode é 'trigger')
             createButton: true, // Se deve criar o botão (usado quando mode é 'button')
             openSelector: '[data-whatsapp-widget="open"]' // Seletor CSS para elementos que devem abrir o popup
@@ -77,7 +77,7 @@ O WhatsApp Widget é uma solução flexível que permite adicionar um botão de 
 ### 1. Modo Botão (`button`)
 ```javascript
 initialization: {
-    mode: 'button',
+    mode: ['button'],
     createButton: true
 }
 ```
@@ -88,7 +88,7 @@ initialization: {
 ### 2. Modo Trigger (`trigger`)
 ```javascript
 initialization: {
-    mode: 'trigger',
+    mode: ['trigger'],
     buttonSelector: '#meu-botao-whatsapp'
 }
 ```
