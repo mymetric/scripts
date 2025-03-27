@@ -655,40 +655,53 @@ function initWhatsAppWidget(config) {
             }
         }
 
+        // Função para lidar com o clique no botão
+        const handleButtonClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            popupOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            sendGAEvent('opened');
+            return false;
+        };
+
         // Configurar o botão do WhatsApp baseado no modo de inicialização
         if (config.initialization) {
-            switch (config.initialization.mode) {
-                case 'button':
-                    // Criar e adicionar o botão do WhatsApp
-                    if (config.initialization.createButton) {
-                        whatsappButton = createWhatsAppButton(config);
-                        document.body.appendChild(whatsappButton);
-                    }
-                    break;
+            // Converter o modo em array se for string
+            const modes = Array.isArray(config.initialization.mode) 
+                ? config.initialization.mode 
+                : [config.initialization.mode];
 
-                case 'trigger':
-                    // Usar botões existentes
-                    const buttons = document.querySelectorAll(config.initialization.buttonSelector);
-                    if (buttons.length === 0) {
-                        console.warn('Nenhum botão do WhatsApp encontrado com o seletor:', config.initialization.buttonSelector);
-                        return { popupOverlay };
-                    }
-                    // Adicionar evento de clique em todos os botões encontrados
-                    buttons.forEach(button => {
-                        button.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            e.stopImmediatePropagation();
-                            popupOverlay.classList.add('active');
-                            document.body.style.overflow = 'hidden';
-                            sendGAEvent('opened');
-                            return false;
-                        }, true); // Usando capture phase
-                    });
-                    // Armazenar o primeiro botão para referência futura
-                    whatsappButton = buttons[0];
-                    break;
-            }
+            // Processar cada modo
+            modes.forEach(mode => {
+                switch (mode) {
+                    case 'button':
+                        // Criar e adicionar o botão do WhatsApp
+                        if (config.initialization.createButton) {
+                            whatsappButton = createWhatsAppButton(config);
+                            document.body.appendChild(whatsappButton);
+                            // Adicionar evento de clique no botão criado
+                            whatsappButton.addEventListener('click', handleButtonClick, true); // Usando capture phase
+                        }
+                        break;
+
+                    case 'trigger':
+                        // Usar botões existentes
+                        const buttons = document.querySelectorAll(config.initialization.buttonSelector);
+                        if (buttons.length === 0) {
+                            console.warn('Nenhum botão do WhatsApp encontrado com o seletor:', config.initialization.buttonSelector);
+                            return;
+                        }
+                        // Adicionar evento de clique em todos os botões encontrados
+                        buttons.forEach(button => {
+                            button.addEventListener('click', handleButtonClick, true); // Usando capture phase
+                        });
+                        // Armazenar o primeiro botão para referência futura
+                        whatsappButton = buttons[0];
+                        break;
+                }
+            });
         }
 
         // Adicionar evento de máscara ao campo de telefone
