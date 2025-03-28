@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.1.5');
+MMConsoleLog('🟢 Pixel ready - v2.1.6');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -123,7 +123,24 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
     // Função para disparar eventos no GA4
     function sendToGA4(eventName, data) {
         data.send_to = ga_id;
-        //data.debug_mode = true;
+
+        // Tenta obter a URL real da página principal
+        let realPageUrl;
+        try {
+            // Se o script está em um iframe, tenta acessar a URL do topo (página principal)
+            realPageUrl = window.top.location.href;
+        } catch (e) {
+            // Caso o acesso ao window.top seja bloqueado (por políticas de segurança),
+            // usa uma lógica alternativa para reconstruir a URL real
+            realPageUrl = window.location.origin + window.location.pathname + window.location.search;
+        }
+
+        // Remove quaisquer referências ao sandbox, se ainda presentes
+        if (realPageUrl.includes('/wpm@') || realPageUrl.includes('/sandbox/')) {
+            realPageUrl = window.location.origin + window.location.pathname.replace(/\/wpm@.*$|\/sandbox.*$/, '');
+        }
+
+        data.page_location = realPageUrl; // Define a URL "limpa" e completa
         gaEventName = convertEvents[eventName].ga;
 
         MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
