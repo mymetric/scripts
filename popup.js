@@ -142,6 +142,7 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
   }
 
   var formContainer = document.createElement('div');
+  formContainer.setAttribute('class', 'form-container');
   formContainer.style.display = 'flex';
   formContainer.style.flexDirection = 'column';
   formContainer.style.alignItems = 'center';
@@ -261,6 +262,7 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
   if (isMetaBrowser()) {
     image.style.height = '45%';
     var ribbon = document.createElement('div');
+    ribbon.setAttribute('class', 'popup-ribbon');
     ribbon.innerHTML = 'Deixe o email ou abra o navegador externo para uma experiÃªncia completa <span style="font-size: 25px;position: absolute;right: 8px;top: 5px;">&#x2191;</span>';
     ribbon.style.position = 'absolute';
     ribbon.style.backgroundColor = '#ffcc00';
