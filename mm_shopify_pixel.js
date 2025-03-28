@@ -123,29 +123,30 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
     // Função para disparar eventos no GA4
     function sendToGA4(eventName, data) {
         data.send_to = ga_id;
-
+    
         // Tenta obter a URL real da página principal
         let realPageUrl;
         try {
             // Se o script está em um iframe, tenta acessar a URL do topo (página principal)
             realPageUrl = window.top.location.href;
         } catch (e) {
-            // Caso o acesso ao window.top seja bloqueado (por políticas de segurança),
-            // usa uma lógica alternativa para reconstruir a URL real
+            // Fallback: reconstrói a URL com base no domínio, caminho e parâmetros
             realPageUrl = window.location.origin + window.location.pathname + window.location.search;
         }
-
-        // Remove quaisquer referências ao sandbox, se ainda presentes
+    
+        // Remove referências ao sandbox, se presentes
         if (realPageUrl.includes('/wpm@') || realPageUrl.includes('/sandbox/')) {
             realPageUrl = window.location.origin + window.location.pathname.replace(/\/wpm@.*$|\/sandbox.*$/, '');
         }
-
-        data.page_location = realPageUrl; // Define a URL "limpa" e completa
+    
+        // Define o parâmetro 'dl' com a URL "limpa" e completa
+        data.dl = realPageUrl;
+    
         gaEventName = convertEvents[eventName].ga;
-
+    
         MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
         console.log(data);
-
+    
         waitForGA4(() => {
             gtag('event', gaEventName, data);
         });
