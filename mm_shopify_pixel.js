@@ -121,14 +121,33 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
     }
 
     // Função para disparar eventos no GA4
-    function sendToGA4(eventName, data) {
-        data.send_to = ga_id;
-        //data.debug_mode = true;
-        gaEventName = convertEvents[eventName].ga;
+    // function sendToGA4(eventName, data) {
+    //     data.send_to = ga_id;
+    //     //data.debug_mode = true;
+    //     gaEventName = convertEvents[eventName].ga;
 
+    //     MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
+    //     console.log(data);
+
+    //     waitForGA4(() => {
+    //         gtag('event', gaEventName, data);
+    //     });
+    // }
+
+    function sendToGA4(eventName, data) {
+        const url = window.location.href;
+        const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
+        const cleanedUrl = url.replace(regex, '');
+    
+        // Set the cleaned URL as the page_location to force it in GA4
+        data.page_location = cleanedUrl; // Override or set page_location
+        data.send_to = ga_id;
+        // data.debug_mode = true; // Uncomment for debugging
+        const gaEventName = convertEvents[eventName].ga;
+    
         MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
         console.log(data);
-
+    
         waitForGA4(() => {
             gtag('event', gaEventName, data);
         });
