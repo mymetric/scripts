@@ -28,16 +28,41 @@ function getCookie(name) {
 }
 
 // gtag.js load
+// window.dataLayer = window.dataLayer || [];
+// function gtag(){ dataLayer.push(arguments); }
+// var mmGtagScript = document.createElement('script');
+// mmGtagScript.async = true;
+// mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
+// document.head.appendChild(mmGtagScript);
+// mmGtagScript.onload = function() {
+//     MMConsoleLog('🟢 Google Tag ready');
+//     gtag('js', new Date());
+//     gtag('config', ga_id);
+// };
+
+// gtag.js load
 window.dataLayer = window.dataLayer || [];
-function gtag(){ dataLayer.push(arguments); }
+function gtag() { dataLayer.push(arguments); }
 var mmGtagScript = document.createElement('script');
 mmGtagScript.async = true;
 mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
 document.head.appendChild(mmGtagScript);
 mmGtagScript.onload = function() {
     MMConsoleLog('🟢 Google Tag ready');
+
+    // Limpar a URL
+    const url = window.location.href;
+    const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
+    const cleanedUrl = url.replace(regex, '');
+
     gtag('js', new Date());
-    gtag('config', ga_id);
+    gtag('config', ga_id, {
+        page_location: cleanedUrl, // Forçar a URL limpa
+        page_path: new URL(cleanedUrl).pathname, // Opcional: caminho limpo
+        page_title: document.title || 'Iframe Content' // Opcional: título personalizado
+    });
+
+    MMConsoleLog('🟢 Configured GA4 with cleaned URL: ' + cleanedUrl);
 };
 
 // gtag.js load checker
@@ -121,33 +146,14 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
     }
 
     // Função para disparar eventos no GA4
-    // function sendToGA4(eventName, data) {
-    //     data.send_to = ga_id;
-    //     //data.debug_mode = true;
-    //     gaEventName = convertEvents[eventName].ga;
-
-    //     MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
-    //     console.log(data);
-
-    //     waitForGA4(() => {
-    //         gtag('event', gaEventName, data);
-    //     });
-    // }
-
     function sendToGA4(eventName, data) {
-        const url = window.location.href;
-        const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
-        const cleanedUrl = url.replace(regex, '');
-    
-        // Set the cleaned URL as the page_location to force it in GA4
-        data.page_location = cleanedUrl; // Override or set page_location
         data.send_to = ga_id;
-        // data.debug_mode = true; // Uncomment for debugging
-        const gaEventName = convertEvents[eventName].ga;
-    
+        //data.debug_mode = true;
+        gaEventName = convertEvents[eventName].ga;
+
         MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
         console.log(data);
-    
+
         waitForGA4(() => {
             gtag('event', gaEventName, data);
         });
