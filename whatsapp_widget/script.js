@@ -613,8 +613,7 @@ function createFormGroup(id, config) {
 // Função para enviar eventos para o Google Analytics
 function sendGAEvent(eventName, eventParams = {}) {
     if (typeof gtag === 'function' && window.widgetConfig.analytics?.measurementId) {
-        const slug = window.widgetConfig.analytics.slug || '';
-        const fullEventName = slug ? `${slug}_whatsapp_widget_${eventName}` : `whatsapp_widget_${eventName}`;
+        const fullEventName = `whatsapp_widget_${eventName}`;
         
         gtag('event', fullEventName, {
             ...eventParams,
