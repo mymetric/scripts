@@ -349,6 +349,8 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 
+console.log('#########');
+console.log(window.widgetConfig.analytics.facebookPixelId);
 fbq('init', window.widgetConfig.analytics.facebookPixelId);
 
 // Função para injetar os estilos
