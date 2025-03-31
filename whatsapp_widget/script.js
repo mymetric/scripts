@@ -340,6 +340,17 @@ const widgetStyles = `
     }
 `;
 
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+
+fbq('init', meta_id[i]);
+
 // Função para injetar os estilos
 function injectStyles(config) {
     // Remover estilos anteriores se existirem
@@ -784,7 +795,9 @@ function initWhatsAppWidget(config) {
                     contactForm.reset();
                     popupOverlay.classList.remove('active');
                     sendGAEvent('completed', formData);
-                    fbq('track', 'Lead');
+                    if(typeof fbq === 'function' && window.widgetConfig.analytics?.facebookPixelId) {
+                        fbq('track', 'Lead');   
+                    }
                     
                     // Abrir WhatsApp após envio bem-sucedido
                     let whatsappMessage = config.whatsapp.message;
