@@ -349,8 +349,6 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 
-console.log('#########');
-console.log(window.widgetConfig.analytics.facebookPixelId);
 fbq('init', window.widgetConfig.analytics.facebookPixelId);
 
 // Função para injetar os estilos
@@ -798,7 +796,10 @@ function initWhatsAppWidget(config) {
                     popupOverlay.classList.remove('active');
                     sendGAEvent('completed', formData);
                     if(typeof fbq === 'function' && window.widgetConfig.analytics?.facebookPixelId) {
-                        fbq('track', 'Lead');   
+                        fbq('trackSingle', window.widgetConfig.analytics.facebookPixelId, 'Lead', {
+                            em: formData.email,
+                            ph: formData.phone
+                        });   
                     }
                     
                     // Abrir WhatsApp após envio bem-sucedido
