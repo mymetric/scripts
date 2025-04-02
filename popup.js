@@ -263,7 +263,7 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
     image.style.height = '45%';
     var ribbon = document.createElement('div');
     ribbon.setAttribute('class', 'popup-ribbon');
-    ribbon.innerHTML = 'Informe seu e-mail ou abra o navegador externo para uma experiência completa<span style="font-size: 25px;position: absolute;right: 8px;top: 5px;">&#x2191;</span>';
+    ribbon.innerHTML = 'Informe seu e-mail ou abra o navegador externo para uma experiência completa<span style="font-size: 25px;position: absolute;right: 15px;top: 15px;">&#x2191;</span>';
     ribbon.style.position = 'absolute';
     ribbon.style.backgroundColor = '#ffcc00';
     ribbon.style.padding = '1px 40px 1px 8px';
