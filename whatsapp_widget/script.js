@@ -799,7 +799,6 @@ function initWhatsAppWidget(config) {
             goToWhatsAppLink.style.fontWeight = '500';
             goToWhatsAppLink.style.textAlign = 'center';
             goToWhatsAppLink.style.textDecoration = 'none';
-            goToWhatsAppLink.style.display = 'block';
             goToWhatsAppLink.style.width = '100%';
             goToWhatsAppLink.style.marginTop = '10px';
             
