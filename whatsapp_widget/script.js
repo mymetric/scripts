@@ -597,6 +597,18 @@ function createPopup(config) {
     
     form.appendChild(submitBtn);
     
+    // Criar botão 'Ir para o WhatsApp'
+    const goToWhatsAppBtn = document.createElement('button');
+    goToWhatsAppBtn.textContent = 'Ir para o WhatsApp';
+    goToWhatsAppBtn.className = 'go-to-whatsapp-btn';
+    goToWhatsAppBtn.style.display = 'none'; // Inicialmente escondido
+    form.appendChild(goToWhatsAppBtn);
+
+    // Evento de clique para redirecionar para o WhatsApp
+    goToWhatsAppBtn.addEventListener('click', () => {
+        abrirWhatsApp(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`);
+    });
+    
     // Montar o popup
     content.appendChild(header);
     content.appendChild(welcomeSection);
@@ -807,18 +819,11 @@ function initWhatsAppWidget(config) {
                             ph: formData.phone
                         });   
                     }
-                    
-                    // Abrir WhatsApp após envio bem-sucedido
-                    let whatsappMessage = config.whatsapp.message;
-                    
-                    // Verifica se o campo email existe e está habilitado
-                    if (config.fields.email?.enabled && formData.email) {
-                        // Substitui o marcador ||email|| pelo email do usuário
-                        whatsappMessage = whatsappMessage.replace(/\|\|email\|\|/g, formData.email);
-                    }
-                    
-                    abrirWhatsApp(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(whatsappMessage)}`);
-                    
+
+                    // Mostrar botão 'Ir para o WhatsApp' após envio bem-sucedido
+                    const goToWhatsAppBtn = contactForm.querySelector('.go-to-whatsapp-btn');
+                    goToWhatsAppBtn.style.display = 'block';
+
                 } catch (error) {
                     console.error('Erro:', error);
                 } finally {
