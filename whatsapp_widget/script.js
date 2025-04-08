@@ -852,6 +852,13 @@ function initWhatsAppWidget(config) {
                         });   
                     }
 
+                    // Substituir o marcador de e-mail na mensagem do WhatsApp
+                    let whatsappMessage = config.whatsapp.message;
+                    if (config.fields.email?.enabled && formData.email) {
+                        whatsappMessage = whatsappMessage.replace('||email||', formData.email);
+                    }
+                    goToWhatsAppLink.href = `https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(whatsappMessage)}`;
+
                     // Mostrar mensagem de confirmação e link 'Ir para o WhatsApp' após envio bem-sucedido
                     confirmationMessage.style.display = 'block';
                     goToWhatsAppLink.style.display = 'block';
