@@ -789,6 +789,19 @@ function initWhatsAppWidget(config) {
             goToWhatsAppLink.href = `https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`;
             goToWhatsAppLink.target = '_blank';
             goToWhatsAppLink.rel = 'noopener noreferrer';
+            
+            // Estilizar o link como botão
+            goToWhatsAppLink.style.background = 'var(--primary-gradient)';
+            goToWhatsAppLink.style.color = 'var(--text-primary)';
+            goToWhatsAppLink.style.padding = '10px 20px';
+            goToWhatsAppLink.style.borderRadius = '6px';
+            goToWhatsAppLink.style.fontSize = '0.95rem';
+            goToWhatsAppLink.style.fontWeight = '500';
+            goToWhatsAppLink.style.textAlign = 'center';
+            goToWhatsAppLink.style.textDecoration = 'none';
+            goToWhatsAppLink.style.display = 'inline-block';
+            goToWhatsAppLink.style.marginTop = '10px';
+            
             contactForm.appendChild(goToWhatsAppLink);
 
             // Manipular envio do formulário
@@ -821,7 +834,8 @@ function initWhatsAppWidget(config) {
                     if (!response.ok) throw new Error('Erro ao enviar dados para o endpoint');
 
                     contactForm.reset();
-                    popupOverlay.classList.remove('active');
+                    // Manter o popup aberto
+                    // popupOverlay.classList.remove('active');
                     sendGAEvent('completed', formData);
                     if(typeof fbq === 'function' && window.widgetConfig.analytics?.facebookPixelId) {
                         fbq('trackSingle', window.widgetConfig.analytics.facebookPixelId, 'Lead', {
