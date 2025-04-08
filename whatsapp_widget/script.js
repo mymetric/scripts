@@ -804,6 +804,14 @@ function initWhatsAppWidget(config) {
             
             contactForm.appendChild(goToWhatsAppLink);
 
+            // Criar mensagem de confirmação
+            const confirmationMessage = document.createElement('div');
+            confirmationMessage.textContent = 'Dados enviados com sucesso!';
+            confirmationMessage.style.display = 'none';
+            confirmationMessage.style.color = 'green';
+            confirmationMessage.style.marginTop = '10px';
+            contactForm.appendChild(confirmationMessage);
+
             // Manipular envio do formulário
             contactForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -844,7 +852,8 @@ function initWhatsAppWidget(config) {
                         });   
                     }
 
-                    // Mostrar link 'Ir para o WhatsApp' após envio bem-sucedido
+                    // Mostrar mensagem de confirmação e link 'Ir para o WhatsApp' após envio bem-sucedido
+                    confirmationMessage.style.display = 'block';
                     goToWhatsAppLink.style.display = 'block';
 
                 } catch (error) {
