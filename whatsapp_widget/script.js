@@ -781,6 +781,16 @@ function initWhatsAppWidget(config) {
                 });
             });
 
+            // Criar link 'Ir para o WhatsApp' estilizado como botão
+            const goToWhatsAppLink = document.createElement('a');
+            goToWhatsAppLink.textContent = 'Ir para o WhatsApp';
+            goToWhatsAppLink.className = 'go-to-whatsapp-btn';
+            goToWhatsAppLink.style.display = 'none'; // Inicialmente escondido
+            goToWhatsAppLink.href = `https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(config.whatsapp.message)}`;
+            goToWhatsAppLink.target = '_blank';
+            goToWhatsAppLink.rel = 'noopener noreferrer';
+            contactForm.appendChild(goToWhatsAppLink);
+
             // Manipular envio do formulário
             contactForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -820,9 +830,8 @@ function initWhatsAppWidget(config) {
                         });   
                     }
 
-                    // Mostrar botão 'Ir para o WhatsApp' após envio bem-sucedido
-                    const goToWhatsAppBtn = contactForm.querySelector('.go-to-whatsapp-btn');
-                    goToWhatsAppBtn.style.display = 'block';
+                    // Mostrar link 'Ir para o WhatsApp' após envio bem-sucedido
+                    goToWhatsAppLink.style.display = 'block';
 
                 } catch (error) {
                     console.error('Erro:', error);
