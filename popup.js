@@ -157,13 +157,13 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
   }
 
   var title = document.createElement('h2');
-  title.innerText = titleText;
+  title.innerHTML = titleText;
   title.style.textAlign = 'center';
   title.style.marginBottom = '10px';
   title.style.color = '#333';
 
   var subtitle = document.createElement('p');
-  subtitle.innerText = subtitleText;
+  subtitle.innerHTML = subtitleText;
   subtitle.style.textAlign = 'center';
   subtitle.style.marginBottom = '10px';
   subtitle.style.color = '#333';
@@ -228,7 +228,7 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
   errorMessage.style.fontSize = '12px';
 
   var submitButton = document.createElement('button');
-  submitButton.innerText = buttonText;
+  submitButton.innerHTML = buttonText;
   submitButton.style.padding = '15px';
   submitButton.style.width = '100%';
   submitButton.style.borderRadius = '5px';
