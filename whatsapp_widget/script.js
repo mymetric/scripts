@@ -428,14 +428,8 @@ function fillTestData() {
 
 // Função para abrir WhatsApp com interação real do usuário
 function abrirWhatsApp(url) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Usar window.location.href para redirecionar
+    window.location.href = url;
 }
 
 // Função para aplicar máscara no telefone
