@@ -791,8 +791,8 @@ function initWhatsAppWidget(config) {
             goToWhatsAppLink.rel = 'noopener noreferrer';
             
             // Estilizar o link como botão
-            goToWhatsAppLink.style.background = 'var(--primary-gradient)';
-            goToWhatsAppLink.style.color = 'var(--text-primary)';
+            goToWhatsAppLink.style.background = '#25d366'; // Cor verde do WhatsApp
+            goToWhatsAppLink.style.color = 'white';
             goToWhatsAppLink.style.padding = '10px 20px';
             goToWhatsAppLink.style.borderRadius = '6px';
             goToWhatsAppLink.style.fontSize = '0.95rem';
