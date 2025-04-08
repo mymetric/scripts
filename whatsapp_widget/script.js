@@ -426,6 +426,18 @@ function fillTestData() {
     });
 }
 
+// Função para abrir WhatsApp com interação real do usuário
+function abrirWhatsApp(url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
 // Função para aplicar máscara no telefone
 function applyPhoneMask(input) {
     let value = input.value.replace(/\D/g, '');
@@ -811,7 +823,8 @@ function initWhatsAppWidget(config) {
                         whatsappMessage = whatsappMessage.replace(/\|\|email\|\|/g, formData.email);
                     }
                     
-                    window.open(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(whatsappMessage)}`, '_blank');
+                    abrirWhatsApp(`https://wa.me/${config.whatsapp.number}?text=${encodeURIComponent(whatsappMessage)}`);
+                    
                 } catch (error) {
                     console.error('Erro:', error);
                 } finally {
