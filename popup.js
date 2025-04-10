@@ -368,7 +368,7 @@ function createPopup(imgUrl, titleText, subtitleText, postUrl, buttonText, close
           console.log('Data sent successfully');
 
           var couponMessage = document.createElement('div');
-          couponMessage.attribute('class', 'coupon-message');
+          couponMessage.setAttribute('class', 'coupon-message');
           couponMessage.style.padding = '20px';
           couponMessage.style.textAlign = 'center';
           couponMessage.style.borderRadius = '5px';
