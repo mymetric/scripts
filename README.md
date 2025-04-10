@@ -50,6 +50,7 @@ function experiment_changes(exp_id) {
 ## MyMetric Popup
 
 ```html
+<script type="text/javascript">
 var img = 'https://i.imgur.com/ysabw5G.png';
 var title = 'Ganhe até <b>R$100 OFF</b><br>Na Sua Primeira Compra';
 var subtitle = 'Cadastre-se para receber seu cupom e ficar por dentro das novidades da Gringa!';
@@ -126,6 +127,7 @@ var phoneRequired = true;
   };
   d.head.appendChild(js);
 })(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@83f81b9e026e5562ca6301b32e752d4f85250aa3/popup.js');
+</script>
 ```
 
 ## MyMetric Shopify Pixel
