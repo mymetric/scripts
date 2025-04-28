@@ -38,8 +38,12 @@ function getCookie(name) {
   }
   
   function createPopup(
-    imgUrl, titleText, subtitleText, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, preQuiz,
-    preQuizTitle = '', preQuizSubtitle = '', preQuizExplanation = '', preQuizButtons = []
+    imgUrl, titleText, subtitleText, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, 
+    preQuiz = false,
+    preQuizTitle = '', 
+    preQuizSubtitle = '', 
+    preQuizExplanation = '', 
+    preQuizButtons = []
   ) {
   
     // Verifica se a URL contém "crm", "email" ou "mautic"
