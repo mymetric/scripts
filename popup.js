@@ -344,11 +344,20 @@ function getCookie(name) {
             // Extrair o código do cupom do afterMessage
             const couponCode = afterMessage.match(/<strong>(.*?)<\/strong>/)[1];
 
-            // Criar o HTML da mensagem
+            // Criar o HTML da mensagem com o cupom em uma linha separada
             const messageHTML = afterMessage.replace(
               /<strong>(.*?)<\/strong>/,
-              `<br><br>
-               <strong style="display: inline-block; background-color: white; border: 2px dashed currentColor; padding: 10px 20px; color: inherit;">$1</strong>`
+              `<div style="margin: 20px 0;">
+                 <strong style="
+                   display: block;
+                   background-color: white;
+                   border: 2px dashed currentColor;
+                   padding: 10px 20px;
+                   color: inherit;
+                   font-size: 20px;
+                   line-height: 1.5;
+                 ">$1</strong>
+               </div>`
             );
 
             couponMessage.innerHTML = messageHTML;
