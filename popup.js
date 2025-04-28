@@ -339,8 +339,60 @@ function getCookie(name) {
             couponMessage.style.marginTop = '10px';
             couponMessage.style.backgroundColor = buttonBgColor;
             couponMessage.style.color = buttonColor;
-            couponMessage.innerHTML = afterMessage;
-  
+
+            // Extrair o código do cupom do afterMessage
+            const couponCode = afterMessage.match(/<strong>(.*?)<\/strong>/)[1];
+
+            // Criar o HTML com o botão de copiar
+            const messageHTML = afterMessage.replace(
+              /<strong>(.*?)<\/strong>/,
+              `<br><br>
+               <strong style="display: inline-block; background-color: white; border: 2px dashed currentColor; padding: 10px 20px; color: inherit;">$1</strong>
+               <br><br>
+               <button id="copyButton" style="
+                background-color: white;
+                border: none;
+                color: ${buttonBgColor};
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 14px;
+                transition: opacity 0.3s ease;
+               ">COPIAR CUPOM</button>`
+            );
+
+            couponMessage.innerHTML = messageHTML;
+
+            // Adicionar evento de clique para copiar o cupom
+            setTimeout(() => {
+              const copyButton = document.getElementById('copyButton');
+              if (copyButton) {
+                copyButton.addEventListener('click', function() {
+                  // Copiar para a área de transferência
+                  navigator.clipboard.writeText(couponCode).then(() => {
+                    // Feedback visual temporário
+                    this.style.opacity = '0.7';
+                    this.textContent = 'COPIADO!';
+                    
+                    // Disparar evento para o dataLayer
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({
+                      event: "popup-coupon",
+                      action: "copy",
+                      coupon: couponCode
+                    });
+
+                    // Restaurar o botão após 2 segundos
+                    setTimeout(() => {
+                      this.style.opacity = '1';
+                      this.textContent = 'COPIAR CUPOM';
+                    }, 2000);
+                  });
+                });
+              }
+            }, 0);
+
             formContainer.innerHTML = '';
             formContainer.appendChild(couponMessage);
             closeLink.innerHTML = 'Fechar';
