@@ -311,7 +311,7 @@ function createPopup(
         title_text: titleText,
         subtitle_text: subtitleText,
         user_meta_data: {
-          pre_quiz: btn
+          pre_quiz: selectedPreQuizOption
         }
       });
 
@@ -435,6 +435,8 @@ function createPopup(
   // --- PRÉ-QUIZ ---
   let showForm = true;
   let preQuizContainer;
+  let selectedPreQuizOption = null; // Variável global para armazenar a opção selecionada
+
   if (preQuiz) {
     showForm = false;
 
@@ -497,6 +499,8 @@ function createPopup(
       button.addEventListener('click', function() {
         this.style.backgroundColor = '#303030';
         this.style.color = '#808080';
+        
+        selectedPreQuizOption = btn; // Armazena a opção selecionada
         
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({
