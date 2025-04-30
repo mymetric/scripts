@@ -521,5 +521,20 @@ function createPopup(
     preQuizContainer.appendChild(preQuizContentWrapper);
     formContainer.style.display = 'none';
     formContainer.parentNode.appendChild(preQuizContainer);
+
+    // Adiciona o closeLink ao preQuizContainer
+    const preQuizCloseLink = closeLink.cloneNode(true);
+    preQuizCloseLink.addEventListener('click', function() {
+      overlay.remove();
+      setCookie('popup_closed', 'true', closeDays);
+      
+      // Adiciona evento de fechamento ao dataLayer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "mm_modal",
+        event_name: "popup_closed"
+      });
+    });
+    preQuizContentWrapper.appendChild(preQuizCloseLink);
   }
 }
