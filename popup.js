@@ -360,7 +360,7 @@ function createPopup(
                  background-color: white;
                  border: 2px dashed currentColor;
                  padding: 10px 20px;
-                 color: inherit;
+                 color: #7b003a;
                  font-size: 20px;
                  line-height: 1.5;
                ">$1</strong>
