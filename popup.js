@@ -214,6 +214,7 @@ function createPopup(
   closeLink.style.cursor = 'pointer';
   closeLink.style.color = '#333';
   closeLink.style.fontSize = '0.8em';
+  closeLink.style.display = 'block';
 
   closeLink.addEventListener('click', function() {
     overlay.remove();
@@ -482,6 +483,7 @@ function createPopup(
     buttonsWrapper.style.flexDirection = 'column';
     buttonsWrapper.style.gap = '10px';
     buttonsWrapper.style.width = '100%';
+    buttonsWrapper.style.marginBottom = '20px';
 
     preQuizButtons.forEach((btn, idx) => {
       const button = document.createElement('button');
