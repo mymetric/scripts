@@ -9,10 +9,16 @@ if (typeof window.analytics_tools_ids  !== 'undefined') {
 }
 
 function MMConsoleLog(content) {
-    var mmBadge = 'MyMetric Shopify Pixel';
-    var style1 = "background: #8430ce; color: white; padding: 1px 3px; border-radius: 1px; margin-right: 10px;";
-    var style2 = "font-weight: bold;";
-    console.log(`%c${mmBadge}%c${content}`, style1, style2);
+    // Check if URL has 'debug' parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDebug = urlParams.has('debug');
+
+    if (isDebug) {
+        var mmBadge = 'MyMetric Shopify Pixel';
+        var style1 = "background: #8430ce; color: white; padding: 1px 3px; border-radius: 1px; margin-right: 10px;";
+        var style2 = "font-weight: bold;";
+        console.log(`%c${mmBadge}%c${content}`, style1, style2);
+    }
 }
 
 
