@@ -431,6 +431,22 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
         //sendToGA4(eventName, purchaseData.ecommerce);
         //sendToMeta(eventName, purchaseData.ecommerce);
-    };    
+    };
+
+    if (eventName === 'alert_displayed') {
+
+        let errorData = {
+            error_name: eventData.name,
+            error_message: eventData.data.alert.message,
+            error_target: eventData.data.alert.target,
+            error_type: eventData.data.alert.type,
+            error_value: eventData.data.alert.value,
+            error_event_name: eventData.name,
+            error_event_type: eventData.type
+        };
+
+        sendToGA4("checkout_error", errorData);
+        
+    }
 
 }
