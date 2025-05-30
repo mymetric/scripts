@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.1.6');
+MMConsoleLog('🟢 Pixel ready - v2.1.8');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -162,6 +162,10 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
         waitForGA4(() => {
             gtag('event', gaEventName, data);
+            gtag('set', 'user_data', {
+                "email": data.email || mmEmail,
+                "phone_number": data.phone || mmPhone
+            });            
         });
     }
 
@@ -350,7 +354,7 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
                 value: parseFloat(eventData.checkout.totalPrice.amount) || 0,
                 items: items || [],
                 email: eventData.checkout.email || null,
-                phone: eventData.checkout.phone || null
+                phone: eventData.checkout.shippingAddress.phone || null
             },
             fired_from: 'custom_pixel'
         };
@@ -376,6 +380,8 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
                 currency: eventData.checkout.totalPrice.currencyCode,
                 value: parseFloat(eventData.checkout.totalPrice.amount) || 0,
                 items: items || [],
+                email: eventData.checkout.email || null,
+                phone: eventData.checkout.shippingAddress.phone || null
             },
             fired_from: 'custom_pixel'
         };
@@ -400,6 +406,8 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
                 currency: eventData.checkout.totalPrice.currencyCode,
                 value: parseFloat(eventData.checkout.totalPrice.amount) || 0,
                 items: items || [],
+                email: eventData.checkout.email || null,
+                phone: eventData.checkout.shippingAddress.phone || null
             },
             fired_from: 'custom_pixel'
         };
