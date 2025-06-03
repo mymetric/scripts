@@ -1,4 +1,19 @@
 function mymetric_tracker(domain, measurementId, useJQuery = false) {
+
+    if (typeof window.gtag !== 'function') {
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+    
+        var script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId;
+        script.onload = function () {
+            gtag('js', new Date());
+            gtag('config', measurementId);
+        };
+        document.head.appendChild(script);
+    }
+    
     function fetchGtagFields(measurementId) {
         function gtag(command, measurementId, field, callback) {
             if (typeof window.gtag === 'function') {
