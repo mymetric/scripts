@@ -161,3 +161,4 @@ function mymetric_tracker(domain, measurementId, useJQuery = false) {
         console.log("====================");
     }
 }
+
