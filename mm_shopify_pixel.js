@@ -140,6 +140,10 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         'checkout_completed': {
             'ga': 'purchase',
             'meta': 'Purchase'
+        },
+        'checkout_error': {
+            'ga': 'checkout_error',
+            'meta': 'checkout_error'
         }
     }
 
