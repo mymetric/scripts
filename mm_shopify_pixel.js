@@ -194,6 +194,14 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
     // Função para disparar eventos no Meta Pixel (Facebook)
     function sendToMeta(eventName, data) {
+
+        if(data.email) {
+            emailHashed = sha256(data.email.toLowerCase().trim());
+        }
+        if(data.phone) {
+            phoneHashed = sha256(formatPhoneInternational(data.phone.trim()));
+        }
+        
         fbEventName = convertEvents[eventName].meta;
         const metaData = typeof data === 'object' ? {
             content_type: 'product',
@@ -205,8 +213,8 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
             value: data.value || 0,
             content_name: data.items[0]?.item_name,
             content_category: data.items[0]?.item_category,
-            em: sha256(data.email.toLowerCase().trim()) || emailHashed,
-            ph: sha256(formatPhoneInternational(data.phone.trim())) || phoneHashed
+            em: emailHashed,
+            ph: phoneHashed
         } : Object.fromEntries([ data.split(": ").map(item => item.trim()) ]);
 
         fbq('track', fbEventName, metaData);
