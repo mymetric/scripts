@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.3');
+MMConsoleLog('🟢 Pixel ready - v2.2.4');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -90,7 +90,7 @@ for (let i = 0; i < meta_id.length; i++) {
 }
 fbq('track', 'PageView');
 
-function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
+function await mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
     const convertEvents = {
         'search_submitted': {
