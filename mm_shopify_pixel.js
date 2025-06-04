@@ -90,7 +90,7 @@ for (let i = 0; i < meta_id.length; i++) {
 }
 fbq('track', 'PageView');
 
-function await mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
+await function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
     const convertEvents = {
         'search_submitted': {
