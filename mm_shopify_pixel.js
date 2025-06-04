@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.6');
+MMConsoleLog('🟢 Pixel ready - v2.2.7');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -188,19 +188,19 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         waitForGA4(() => {
             gtag('event', gaEventName, data);
             gtag('set', 'user_data', {
-                "email": data.email || cleanEmail,
-                "phone_number": data.phone || cleanPhone
+                "email": cleanEmail || data.email,
+                "phone_number": cleanPhone || data.phone
             });            
         });
     }
 
     // Função para disparar eventos no Meta Pixel (Facebook)
     function sendToMeta(eventName, data) {
-
-        if(data.email) {
+        
+        if(data.email && !emailHashed) {
             emailHashed = sha256(data.email.toLowerCase().trim());
         }
-        if(data.phone) {
+        if(data.phone && !phoneHashed) {
             phoneHashed = sha256(formatPhoneInternational(data.phone.trim()));
         }
         
