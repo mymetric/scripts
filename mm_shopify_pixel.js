@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.4');
+MMConsoleLog('🟢 Pixel ready - v2.2.5');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -90,7 +90,15 @@ for (let i = 0; i < meta_id.length; i++) {
 }
 fbq('track', 'PageView');
 
-await function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
+function sha256(input) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input.toLowerCase().trim());
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
     const convertEvents = {
         'search_submitted': {
@@ -132,14 +140,6 @@ await function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
             'ga': 'checkout_error',
             'meta': 'checkout_error'
         }
-    }
-
-    function sha256(input) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(input.toLowerCase().trim());
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
     function decodeBase64(str) {
