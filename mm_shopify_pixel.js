@@ -134,8 +134,40 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         }
     }
 
-    const mmEmail = getCookie('mm_email') || null;
-    const mmPhone = getCookie('mm_phone') || null;
+    function sha256(input) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(input.toLowerCase().trim());
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function decodeBase64(str) {
+        try {
+            return atob(str).trim(); // remove espaços antes/depois do decode
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function formatPhoneInternational(phone) {
+        if (!phone) return null;
+        const digits = phone.replace(/\D/g, '');
+        if (digits.length === 11) return `+55${digits}`;
+        if (digits.length === 13 && digits.startsWith('55')) return `+${digits}`;
+        return null;
+    }
+
+    const emailRaw = decodeBase64(getCookie('mm_email'));
+    const phoneRaw = decodeBase64(getCookie('mm_phone'));
+
+    const cleanEmail = emailRaw ? emailRaw.toLowerCase().trim() : null;
+    const cleanPhone = phoneRaw ? formatPhoneInternational(phoneRaw.trim()) : null;
+
+    const emailHashed = cleanEmail ? await sha256(cleanEmail) : null;
+    const phoneHashed = cleanPhone ? await sha256(cleanPhone) : null;
+
+
 
     if(eventName in convertEvents) {
         MMConsoleLog('🚩 [Shopify event] ' + eventName);
@@ -154,8 +186,8 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         waitForGA4(() => {
             gtag('event', gaEventName, data);
             gtag('set', 'user_data', {
-                "email": data.email || mmEmail,
-                "phone_number": data.phone || mmPhone
+                "email": data.email || cleanEmail,
+                "phone_number": data.phone || cleanPhone
             });            
         });
     }
@@ -173,8 +205,8 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
             value: data.value || 0,
             content_name: data.items[0]?.item_name,
             content_category: data.items[0]?.item_category,
-            em: data.email || mmEmail,
-            ph: data.phone || mmPhone
+            em: sha256(data.email.toLowerCase().trim()) || emailHashed,
+            ph: sha256(formatPhoneInternational(data.phone.trim())) || phoneHashed
         } : Object.fromEntries([ data.split(": ").map(item => item.trim()) ]);
 
         fbq('track', fbEventName, metaData);
