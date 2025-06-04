@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.1.8');
+MMConsoleLog('🟢 Pixel ready - v2.2');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
