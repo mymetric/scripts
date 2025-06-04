@@ -320,7 +320,7 @@ function createPopup(
 
       errorMessage.style.display = 'none';
 
-      setCookie('mm_phone', btoa(name), 365);
+      setCookie('mm_name', btoa(name), 365);
       setCookie('mm_email', btoa(email), 365);
       
       if (!disablePhoneField) {
