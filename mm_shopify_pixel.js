@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2');
+MMConsoleLog('🟢 Pixel ready - v2.2.1');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -137,7 +137,7 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
     function sha256(input) {
         const encoder = new TextEncoder();
         const data = encoder.encode(input.toLowerCase().trim());
-        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashBuffer = crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
@@ -164,8 +164,8 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
     const cleanEmail = emailRaw ? emailRaw.toLowerCase().trim() : null;
     const cleanPhone = phoneRaw ? formatPhoneInternational(phoneRaw.trim()) : null;
 
-    const emailHashed = cleanEmail ? await sha256(cleanEmail) : null;
-    const phoneHashed = cleanPhone ? await sha256(cleanPhone) : null;
+    const emailHashed = cleanEmail ? sha256(cleanEmail) : null;
+    const phoneHashed = cleanPhone ? sha256(cleanPhone) : null;
 
 
 
