@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.7');
+MMConsoleLog('🟢 Pixel ready - v2.2.8');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -168,6 +168,12 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
     const emailHashed = cleanEmail ? sha256(cleanEmail) : null;
     const phoneHashed = cleanPhone ? sha256(cleanPhone) : null;
+
+    MMConsoleLog('✉️ Email Limpo: ' + cleanEmail);
+    MMConsoleLog('✉️ Email Hash: ' + emailHashed);
+    
+    MMConsoleLog('📞 Phone Limpo: ' + cleanPhone);
+    MMConsoleLog('📞 Phone Hash: ' + phoneHashed);
 
 
 
