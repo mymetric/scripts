@@ -126,7 +126,7 @@ var phoneRequired = true;
     createPopup(img, title, subtitle, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, phoneRequired);
   };
   d.head.appendChild(js);
-})(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@83f81b9e026e5562ca6301b32e752d4f85250aa3/popup.js');
+})(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@main/popup.js');
 </script>
 ```
 
