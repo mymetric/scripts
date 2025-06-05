@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.10');
+MMConsoleLog('🟢 Pixel ready - v2.2.11');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -320,6 +320,7 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         gaEventName = convertEvents[eventName].ga;
 
         MMConsoleLog('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
+        console.log(cleanEmail, cleanPhone);
         console.log(data);
 
         waitForGA4(() => {
