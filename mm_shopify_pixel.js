@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.9');
+MMConsoleLog('🟢 Pixel ready - v2.2.10');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -231,6 +231,36 @@ function md5(input) {
         .join('');
 }
 
+function decodeBase64(str) {
+    try {
+        return atob(str).trim(); // remove espaços antes/depois do decode
+    } catch (e) {
+        return null;
+    }
+}
+
+function formatPhoneInternational(phone) {
+    if (!phone) return null;
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 11) return `+55${digits}`;
+    if (digits.length === 13 && digits.startsWith('55')) return `+${digits}`;
+    return null;
+}
+
+const emailRaw = decodeBase64(getCookie('mm_email'));
+const phoneRaw = decodeBase64(getCookie('mm_phone'));
+
+const cleanEmail = emailRaw ? emailRaw.toLowerCase().trim() : null;
+const cleanPhone = phoneRaw ? formatPhoneInternational(phoneRaw.trim()) : null;
+
+const emailHashed = cleanEmail ? md5(cleanEmail) : null;
+const phoneHashed = cleanPhone ? md5(cleanPhone) : null;
+
+MMConsoleLog('✉️ Email Limpo: ' + cleanEmail);
+MMConsoleLog('✉️ Email Hash: ' + emailHashed);
+
+MMConsoleLog('📞 Phone Limpo: ' + cleanPhone);
+MMConsoleLog('📞 Phone Hash: ' + phoneHashed);
 
 function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
 
@@ -276,37 +306,6 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         }
     }
 
-    function decodeBase64(str) {
-        try {
-            return atob(str).trim(); // remove espaços antes/depois do decode
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function formatPhoneInternational(phone) {
-        if (!phone) return null;
-        const digits = phone.replace(/\D/g, '');
-        if (digits.length === 11) return `+55${digits}`;
-        if (digits.length === 13 && digits.startsWith('55')) return `+${digits}`;
-        return null;
-    }
-
-    const emailRaw = decodeBase64(getCookie('mm_email'));
-    const phoneRaw = decodeBase64(getCookie('mm_phone'));
-
-    const cleanEmail = emailRaw ? emailRaw.toLowerCase().trim() : null;
-    const cleanPhone = phoneRaw ? formatPhoneInternational(phoneRaw.trim()) : null;
-
-    const emailHashed = cleanEmail ? md5(cleanEmail) : null;
-    const phoneHashed = cleanPhone ? md5(cleanPhone) : null;
-
-    MMConsoleLog('✉️ Email Limpo: ' + cleanEmail);
-    MMConsoleLog('✉️ Email Hash: ' + emailHashed);
-    
-    MMConsoleLog('📞 Phone Limpo: ' + cleanPhone);
-    MMConsoleLog('📞 Phone Hash: ' + phoneHashed);
-
 
 
     if(eventName in convertEvents) {
@@ -324,11 +323,11 @@ function mmShopifyPixel(ga_id, meta_id, eventName, eventData) {
         console.log(data);
 
         waitForGA4(() => {
-            gtag('event', gaEventName, data);
             gtag('set', 'user_data', {
-                "email": cleanEmail || data.email,
-                "phone_number": cleanPhone || data.phone
-            });            
+                email: cleanEmail || data.email || undefined,
+                phone_number: cleanPhone || data.phone || undefined
+            });
+            gtag('event', gaEventName, data);
         });
     }
 
