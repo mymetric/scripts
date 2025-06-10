@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-MMConsoleLog('🟢 Pixel ready - v2.2.11');
+MMConsoleLog('🟢 Pixel ready - v2.2.12');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -50,6 +50,7 @@ mmGtagScript.onload = function() {
 
     gtag('js', new Date());
     gtag('config', ga_id, {
+        send_page_view: false,
         page_location: cleanedUrl, // Forçar a URL limpa
         page_path: new URL(cleanedUrl).pathname, // Opcional: caminho limpo
         page_title: document.title || 'Iframe Content' // Opcional: título personalizado
