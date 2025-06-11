@@ -1,8 +1,5 @@
+function email_tracker(sourceParam, emailSelector) {
 
-  var emailSelector = 'input[type="email"], #input-email';
-  var sourceParam = 'havaianas_popup_subscribe';
-
-  
   var postUrl = 'https://mymetric-hub-shopify.ue.r.appspot.com/?source=' + encodeURIComponent(sourceParam);
 
   function getCookie(name) {
@@ -77,6 +74,5 @@
     subtree: true
   });
 
-
-
-
+}
+  
