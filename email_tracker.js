@@ -38,11 +38,27 @@ function email_tracker(sourceParam, emailSelector) {
     });
   }
 
-  function scanForEmailFields(root) {
-    if (!root) root = document;
-    var emailFields = root.querySelectorAll(emailSelector);
-    for (var i = 0; i < emailFields.length; i++) {
-      logEmailOnChange(emailFields[i]);
+  // Escaneia um root (normal ou shadow) e recursivamente entra em shadow roots
+  function deepScanForEmailFields(root) {
+    if (!root) return;
+
+    try {
+      var emailFields = root.querySelectorAll(emailSelector);
+      for (var i = 0; i < emailFields.length; i++) {
+        logEmailOnChange(emailFields[i]);
+      }
+    } catch (e) {
+      // Pode lançar erro em alguns tipos de nós (ex: document-fragment)
+    }
+
+    // Verifica se há shadow roots nos elementos filhos
+    var children = root.children || [];
+    for (var j = 0; j < children.length; j++) {
+      var child = children[j];
+      if (child.shadowRoot) {
+        deepScanForEmailFields(child.shadowRoot);
+      }
+      deepScanForEmailFields(child); // recursivamente entra nos filhos normais também
     }
   }
 
@@ -50,10 +66,10 @@ function email_tracker(sourceParam, emailSelector) {
     return node.matches && node.matches(emailSelector);
   }
 
-  // Inicial: captura campos já presentes
-  scanForEmailFields();
+  // Inicial
+  deepScanForEmailFields(document);
 
-  // Observa mudanças no DOM para detectar novos campos
+  // Observer para DOM normal
   var observer = new MutationObserver(function (mutations) {
     mutations.forEach(function (mutation) {
       for (var i = 0; i < mutation.addedNodes.length; i++) {
@@ -62,7 +78,11 @@ function email_tracker(sourceParam, emailSelector) {
           if (matchesEmailSelector(node)) {
             logEmailOnChange(node);
           } else {
-            scanForEmailFields(node);
+            deepScanForEmailFields(node);
+            // Se o novo nó tiver shadow root, escaneia também
+            if (node.shadowRoot) {
+              deepScanForEmailFields(node.shadowRoot);
+            }
           }
         }
       }
@@ -75,4 +95,3 @@ function email_tracker(sourceParam, emailSelector) {
   });
 
 }
-  
