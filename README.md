@@ -154,3 +154,18 @@ var phoneRequired = true;
       });
   };
 ```
+## MyMetric Email Tracker
+
+```html
+<script type="text/javascript">
+ 
+var mmtr = document.createElement("script");
+mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/email_tracker.js";
+mmtr.onload = function() {
+    email_tracker('havaianas_popup_subscribe', 'input[type="email"], #input-email');
+};
+document.head.appendChild(mmtr);
+  
+</script>
+```
+
