@@ -351,7 +351,6 @@ function createPopup(
 
           formContainer.innerHTML = '';
           formContainer.appendChild(couponMessage);
-          formContainer.appendChild(copyButton);
           closeLink.innerHTML = 'Fechar';
           closeLink.style.fontSize = '15px';
           closeLink.style.padding = '10px 0';
