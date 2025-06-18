@@ -345,68 +345,9 @@ function createPopup(
           couponMessage.style.textAlign = 'center';
           couponMessage.style.borderRadius = '5px';
           couponMessage.style.marginTop = '10px';
-          couponMessage.style.marginBottom = '15px';
           couponMessage.style.backgroundColor = buttonBgColor;
           couponMessage.style.color = buttonColor;
-
-          // Extrair o código do cupom do afterMessage
-          const couponCode = afterMessage.match(/<strong>(.*?)<\/strong>/)[1];
-
-          // Criar o HTML da mensagem com o cupom em uma linha separada
-          const messageHTML = afterMessage.replace(
-            /<strong>(.*?)<\/strong>/,
-            `<div style="margin: 20px 0;">
-               <strong style="
-                 display: block;
-                 background-color: white;
-                 border: 2px dashed currentColor;
-                 padding: 10px 20px;
-                 color: #7b003a;
-                 font-size: 20px;
-                 line-height: 1.5;
-               ">$1</strong>
-             </div>`
-          );
-
-          couponMessage.innerHTML = messageHTML;
-
-          // Criar o botão de copiar separadamente
-          const copyButton = document.createElement('button');
-          copyButton.id = 'copyButton';
-          copyButton.textContent = 'COPIAR CUPOM';
-          copyButton.style.backgroundColor = 'white';
-          copyButton.style.border = 'none';
-          copyButton.style.color = buttonBgColor;
-          copyButton.style.padding = '10px 20px';
-          copyButton.style.borderRadius = '5px';
-          copyButton.style.cursor = 'pointer';
-          copyButton.style.fontWeight = 'bold';
-          copyButton.style.fontSize = '14px';
-          copyButton.style.transition = 'opacity 0.3s ease';
-          copyButton.style.marginBottom = '15px';
-
-          // Adicionar evento de clique para copiar o cupom
-          copyButton.addEventListener('click', function() {
-            navigator.clipboard.writeText(couponCode).then(() => {
-              // Feedback visual temporário
-              this.style.opacity = '0.7';
-              this.textContent = 'COPIADO!';
-              
-              // Disparar evento para o dataLayer
-              window.dataLayer = window.dataLayer || [];
-              window.dataLayer.push({
-                event: "popup-coupon",
-                action: "copy",
-                coupon: couponCode
-              });
-
-              // Restaurar o botão após 2 segundos
-              setTimeout(() => {
-                this.style.opacity = '1';
-                this.textContent = 'COPIAR CUPOM';
-              }, 2000);
-            });
-          });
+          couponMessage.innerHTML = afterMessage;
 
           formContainer.innerHTML = '';
           formContainer.appendChild(couponMessage);
