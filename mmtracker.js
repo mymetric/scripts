@@ -1,5 +1,33 @@
 function mymetric_tracker(domain, measurementId, useJQuery = false) {
 
+    function set_cookie(name, value, days, domain) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; domain=." + domain + "; path=/";
+    }
+
+    // Função para ler parâmetros da URL e gravar cookies
+    function processUrlParameters() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var parametersToTrack = ['ttclid', 'msclkid'];
+        
+        parametersToTrack.forEach(function(param) {
+            var value = urlParams.get(param);
+            if (value) {
+                // Grava o cookie com o valor da URL
+                set_cookie('_' + param, value, 365, domain);
+                console.log('Cookie gravado:', '_' + param, '=', value);
+            }
+        });
+    }
+
+    // Executa a leitura da URL e gravação de cookies imediatamente
+    processUrlParameters();
+
     if (typeof window.gtag !== 'function') {
         window.dataLayer = window.dataLayer || [];
         window.gtag = function () { dataLayer.push(arguments); };
@@ -54,16 +82,6 @@ function mymetric_tracker(domain, measurementId, useJQuery = false) {
         if (parts.length === 2) return parts.pop().split(";").shift();
     }
 
-    function set_cookie(name, value, days, domain) {
-        var expires = "";
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; domain=." + domain + "; path=/";
-    }
-
     function getParameterByName(name) {
         name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
         var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -84,6 +102,7 @@ function mymetric_tracker(domain, measurementId, useJQuery = false) {
                 fbp: getCookie("_fbp"),
                 fbc: getCookie("_fbc"),
                 gclid: getCookie("_gcl_aw"),
+                ttclid: getCookie("_ttclid"),
                 ua: btoa(navigator.userAgent)
             };
 
