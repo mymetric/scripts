@@ -1,4 +1,4 @@
-function mymetric_tracker(domain, measurementId) {
+function mymetric_tracker(domain, measurementId, encoded = false) {
     function fetchGtagFields(measurementId) {
         function gtag(command, measurementId, field, callback) {
             if (typeof window.gtag === 'function') {
@@ -66,6 +66,11 @@ function mymetric_tracker(domain, measurementId) {
             };
 
             var cookiesJson = JSON.stringify(cookies);
+            
+            if(encoded) {
+                var cookiesJson = encodeURIComponent(cookiesJson);
+            }
+            
             set_cookie("mm_tracker", cookiesJson, 365, domain);
         } else {
             console.log('Skipping mm_tracker cookie creation: client_id or session_id is null');
