@@ -77,7 +77,7 @@ function getCookie(name) {
       script.onload = () => {
         console.log("[mm_tracker] gtag carregado");
         gtag("js", new Date());
-        gtag("config", measurementId);
+        gtag("config", measurementId, { send_page_view: false });
         continueTracking();
       };
   
