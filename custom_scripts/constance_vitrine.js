@@ -317,24 +317,6 @@ function montarVitrine() {
     if (mm_alvo?.parentNode) {
       mm_alvo.parentNode.insertBefore(mm_container, mm_alvo);
       console.log("[Vitrine] Vitrine inserida antes do elemento alvo.");
-      var el = document.querySelector("#render-store\\.home > div > div.vtex-store__template.bg-base > div > div:nth-child(4) > div > div.vtex-render__container-id-home2 > div.vtex-rich-text-0-x-container.vtex-rich-text-0-x-container--home-title-carrousel.flex.tl.items-start.justify-start.t-body.c-on-base");
-      if (el) el.remove();
-      
-      var el = document.querySelector("#render-store\\.home > div > div.vtex-store__template.bg-base > div > div:nth-child(4) > div > div.vtex-render__container-id-home2 > div.vtex-flex-layout-0-x-flexRow.vtex-flex-layout-0-x-flexRow--home-shelf");
-      if (el) el.remove();
-      
-      var el = document.querySelector("#render-store\\.home > div > div.vtex-store__template.bg-base > div > div:nth-child(4) > div > div.vtex-render__container-id-home2 > a");
-      if (el) el.remove();
-      
-      
-      var el = document.querySelector("body > div.render-container.render-route-store-home > div > div.vtex-store__template.bg-base > div > div:nth-child(6) > div > div.vtex-render__container-id-home2 > div.vtex-rich-text-0-x-container.vtex-rich-text-0-x-container--home-title-carrousel.flex.tl.items-start.justify-start.t-body.c-on-base");
-      if (el) el.remove();
-      
-      var el = document.querySelector("body > div.render-container.render-route-store-home > div > div.vtex-store__template.bg-base > div > div:nth-child(6) > div > div.vtex-render__container-id-home2 > div.vtex-flex-layout-0-x-flexRow.vtex-flex-layout-0-x-flexRow--home-shelf");
-      if (el) el.remove();
-      
-      var el = document.querySelector("body > div.render-container.render-route-store-home > div > div.vtex-store__template.bg-base > div > div:nth-child(6) > div > div.vtex-render__container-id-home2 > a");
-      if (el) el.remove();
     } else {
       //document.body.appendChild(mm_container);
       console.warn("[Vitrine] Elemento alvo não encontrado, vitrine adicionada ao body.");
