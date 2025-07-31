@@ -23,7 +23,7 @@ document.head.appendChild(mmtr);
 
 Se for Yampi, fazer via GTM com esse código:
 
-```javascript
+```html
 <script>
 var mmtr = document.createElement("script");
 mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mymetric_tracker/main.js";
