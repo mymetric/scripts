@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-mymetric_log('🟢 Pixel ready - v2.3');
+mymetric_log('🟢 Pixel ready - v2.4');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
