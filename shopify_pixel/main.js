@@ -279,13 +279,18 @@ mymetric_log('✉️ Email Hash: ' + emailHashed);
 mymetric_log('📞 Phone Limpo: ' + cleanPhone);
 mymetric_log('📞 Phone Hash: ' + phoneHashed);
 
-function mymetric_shopify_pixel(analytics_tools_ids, eventName, eventData) {
+function mymetric_shopify_pixel(analytics_tools_ids, eventName, eventData, send_page_view = false) {
 
     const ga_id = analytics_tools_ids.ga;
     const meta_id = analytics_tools_ids.meta;
     const tiktok_id = analytics_tools_ids.tiktok;
 
     const convertEvents = {
+        'page_viewed': {
+            'ga': 'page_view',
+            'meta': 'PageView',
+            'tiktok': 'PageView'
+        },
         'search_submitted': {
             'ga': 'search',
             'meta': 'Search',
@@ -444,6 +449,14 @@ function mymetric_shopify_pixel(analytics_tools_ids, eventName, eventData) {
         console.log(ttqData);
     }
 
+    if (eventName === 'page_viewed') {
+        if(send_page_view) {
+            sendToGA4(eventName);
+            sendToMeta(eventName);
+            sendToTiktok(eventName);    
+        }
+    }
+    
     // Disparado quando um usuário realiza uma busca no site
     if (eventName === 'search_submitted') {
 
