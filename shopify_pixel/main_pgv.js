@@ -34,30 +34,63 @@ function getCookie(name) {
 
 // gtag.js load
 window.dataLayer = window.dataLayer || [];
-function gtag() { dataLayer.push(arguments); }
+mymetric_log('🔵 DataLayer initialized');
+
+function gtag() {
+    mymetric_log('🔵 gtag function called with arguments: ', arguments);
+    window.dataLayer.push(arguments);
+}
+
 if (typeof ga_id !== 'undefined' && ga_id) {
+    mymetric_log('🔵 ga_id is defined: ' + ga_id);
     var mmGtagScript = document.createElement('script');
     mmGtagScript.async = true;
     mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
-    document.head.appendChild(mmGtagScript);
-    mmGtagScript.onload = function() {
-        mymetric_log('🟢 Google Tag ready');
-
-        // Limpar a URL
-        const url = window.location.href;
-        const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
-        const cleanedUrl = url.replace(regex, '');
-
-        gtag('js', new Date());
-        gtag('config', ga_id, {
-            send_page_view: true,
-            page_location: cleanedUrl, // Forçar a URL limpa
-            page_path: new URL(cleanedUrl).pathname, // Opcional: caminho limpo
-            page_title: document.title || 'Iframe Content' // Opcional: título personalizado
-        });
-
-        mymetric_log('🟢 Configured GA4 with cleaned URL: ' + cleanedUrl);
-    };
+    mymetric_log('🔵 Script element created with src: ' + mmGtagScript.src);
+    
+    try {
+        document.head.appendChild(mmGtagScript);
+        mymetric_log('🟢 Script appended to document.head');
+        
+        mmGtagScript.onload = function() {
+            mymetric_log('🟢 Google Tag script loaded successfully');
+            
+            // Limpar a URL
+            const url = window.location.href;
+            mymetric_log('🔵 Original URL: ' + url);
+            const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
+            const cleanedUrl = url.replace(regex, '');
+            mymetric_log('🔵 Cleaned URL: ' + cleanedUrl);
+            
+            try {
+                gtag('js', new Date());
+                mymetric_log('🟢 gtag js event sent with timestamp: ' + new Date().toISOString());
+                
+                const pagePath = new URL(cleanedUrl).pathname;
+                const pageTitle = document.title || 'Iframe Content';
+                mymetric_log('🔵 Page path: ' + pagePath);
+                mymetric_log('🔵 Page title: ' + pageTitle);
+                
+                gtag('config', ga_id, {
+                    send_page_view: true,
+                    page_location: cleanedUrl,
+                    page_path: pagePath,
+                    page_title: pageTitle
+                });
+                mymetric_log('🟢 Configured GA4 with ga_id: ' + ga_id + ', cleaned URL: ' + cleanedUrl);
+            } catch (error) {
+                mymetric_log('🔴 Error in gtag configuration: ' + error.message);
+            }
+        };
+        
+        mmGtagScript.onerror = function() {
+            mymetric_log('🔴 Failed to load Google Tag script');
+        };
+    } catch (error) {
+        mymetric_log('🔴 Error appending script to document.head: ' + error.message);
+    }
+} else {
+    mymetric_log('🔴 ga_id is undefined or falsy');
 }
 
 
