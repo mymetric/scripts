@@ -31,35 +31,33 @@ function getCookie(name) {
     return null;
 }
 
-function load_gtag(page_view) {
-    // gtag.js load
-    window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
-    if (typeof ga_id !== 'undefined' && ga_id) {
-        var mmGtagScript = document.createElement('script');
-        mmGtagScript.async = true;
-        mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
-        document.head.appendChild(mmGtagScript);
-        mmGtagScript.onload = function() {
-            mymetric_log('🟢 Google Tag ready');
-    
-            // Limpar a URL
-            const url = window.location.href;
-            const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
-            const cleanedUrl = url.replace(regex, '');
-    
-            gtag('js', new Date());
-            gtag('config', ga_id, {
-                send_page_view: page_view,
-                page_location: cleanedUrl, // Forçar a URL limpa
-                page_path: new URL(cleanedUrl).pathname, // Opcional: caminho limpo
-                page_title: document.title || 'Iframe Content' // Opcional: título personalizado
-            });
-    
-            mymetric_log('🟢 Configured GA4 with cleaned URL: ' + cleanedUrl);
-        };
-    }
-    
+
+// gtag.js load
+window.dataLayer = window.dataLayer || [];
+function gtag() { dataLayer.push(arguments); }
+if (typeof ga_id !== 'undefined' && ga_id) {
+    var mmGtagScript = document.createElement('script');
+    mmGtagScript.async = true;
+    mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
+    document.head.appendChild(mmGtagScript);
+    mmGtagScript.onload = function() {
+        mymetric_log('🟢 Google Tag ready');
+
+        // Limpar a URL
+        const url = window.location.href;
+        const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
+        const cleanedUrl = url.replace(regex, '');
+
+        gtag('js', new Date());
+        gtag('config', ga_id, {
+            send_page_view: false,
+            page_location: cleanedUrl, // Forçar a URL limpa
+            page_path: new URL(cleanedUrl).pathname, // Opcional: caminho limpo
+            page_title: document.title || 'Iframe Content' // Opcional: título personalizado
+        });
+
+        mymetric_log('🟢 Configured GA4 with cleaned URL: ' + cleanedUrl);
+    };
 }
 
 
