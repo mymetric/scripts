@@ -67,7 +67,6 @@ var closeDays = 7;
 var buttonColor = '#fff';
 var buttonBgColor = 'rgb(255 51 0 / var(--tw-bg-opacity))';
 var disablePhoneField = false;
-var phoneRequired = true;
 
 (function(d, s, url) {
   var js = d.createElement(s);
@@ -123,7 +122,7 @@ var phoneRequired = true;
     d.head.appendChild(style);
 
     // Now create the popup
-    createPopup(img, title, subtitle, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, phoneRequired);
+    createPopup(img, title, subtitle, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField);
   };
   d.head.appendChild(js);
 })(document, 'script', 'https://cdn.jsdelivr.net/gh/mymetric/scripts@main/popup.js');
