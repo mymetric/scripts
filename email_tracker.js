@@ -2,6 +2,16 @@ function email_tracker(sourceParam, emailSelector) {
 
   var postUrl = 'https://mymetric-hub-shopify.ue.r.appspot.com/?source=' + encodeURIComponent(sourceParam);
 
+  function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+      var date = new Date();
+      date.setTime(date.getTime() + (days*24*60*60*1000));
+      expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+  }
+
   function getCookie(name) {
     var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     if (match) return match[2];
@@ -15,6 +25,8 @@ function email_tracker(sourceParam, emailSelector) {
     input.addEventListener('change', function (e) {
       var email = e.target.value;
       console.log('Email capturado:', email);
+
+      setCookie('mm_email', btoa(email), 365);
 
       var mmTracker = getCookie('mm_tracker');
       var formData = JSON.stringify({
