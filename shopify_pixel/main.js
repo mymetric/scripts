@@ -48,7 +48,7 @@ script.src = `https://www.googletagmanager.com/gtag/js?id=${ga_id}`;
 script.onload = () => {
   mymetric_log("gtag carregado");
   gtag("js", new Date());
-  gtag("config", measurementId, { send_page_view: false });
+  gtag("config", ga_id, { send_page_view: false });
 };
 
 script.onerror = () => {
