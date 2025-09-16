@@ -310,7 +310,7 @@ function createPopup(
         source: "popup",
         name: name,
         email: email,
-        phone: phone,
+        phone: phone.replace(/\D/g, ""),
         mm_tracker: mmTracker,
         title_text: titleText,
         subtitle_text: subtitleText,
