@@ -1,8 +1,6 @@
 function montarVitrine() {
   console.log("[Vitrine] Iniciando carregamento do catálogo...");
-
   let mm_track, mm_itemWidth, mm_itemsPerPage, mm_totalPages, mm_currentPage, mm_dots, mm_prevBtn, mm_nextBtn;
-
   fetch("https://storage.googleapis.com/constance-json/catalogo_filtrado.json")
     .then(res => {
       console.log("[Vitrine] Fetch response status:", res.status);
@@ -14,28 +12,27 @@ function montarVitrine() {
     .then(mm_rawData => {
       console.log("[Vitrine] Raw data received:", mm_rawData);
       const mm_produtos = mm_rawData.map(p => {
-        if (!p.idProduto || !p.name || !p.images?.bigimage) {
+        if (!p.idProduto || !p.name || !p.images) {
           console.warn("[Vitrine] Produto inválido:", p);
           return null;
         }
         return {
-          idProduto: p.idProduto[0] || "",
-          name: p.name[0] || "Produto sem nome",
-          id: p.id[0] || "",
-          description: p.description[0] || "",
-          categoryid1: p.categoryid1[0] || "",
-          categoryid2: p.categoryid2[0] || "",
-          producturl: p.producturl[0] || "#",
-          images: { bigimage: p.images.bigimage[0] || "" },
-          price: p.price[0] || "0,00",
-          retailprice: p.retailprice[0] || "0,00",
-          price_original: p.price_original[0] || "0,00",
-          sale_price: p.sale_price[0] || "0,00",
-          pgmt: p.pgmt[0] || "",
-          instock: p.instock[0] || false
+          idProduto: p.idProduto || "",
+          name: p.name || "Produto sem nome",
+          id: p.id || "",
+          description: p.description || "",
+          categoryid1: p.categoryid1 || "",
+          categoryid2: p.categoryid2 || "",
+          producturl: p.producturl || "#",
+          images: { bigimage: p.images || "" }, // Adjust for direct image URL
+          price: p.price || "0,00",
+          retailprice: p.retailprice || "0,00",
+          price_original: p.price_original || "0,00",
+          sale_price: p.sale_price || "0,00",
+          pgmt: p.pgmt || "",
+          instock: p.instock || false
         };
       }).filter(p => p !== null);
-
       console.log("[Vitrine] Produtos normalizados:", mm_produtos);
       if (mm_produtos.length === 0) {
         console.error("[Vitrine] Nenhum produto válido encontrado!");
@@ -46,7 +43,6 @@ function montarVitrine() {
     .catch(err => {
       console.error("[Vitrine] Erro ao carregar catálogo:", err);
     });
-
   function mm_updateSlider() {
     console.log("[Vitrine] mm_track:", mm_track);
     console.log("[Vitrine] mm_prevBtn:", mm_prevBtn);
@@ -56,7 +52,6 @@ function montarVitrine() {
       console.error("[Vitrine] One or more DOM elements are missing!");
       return;
     }
-
     console.log("[Vitrine] mm_currentPage:", mm_currentPage);
     console.log("[Vitrine] mm_itemsPerPage:", mm_itemsPerPage);
     console.log("[Vitrine] mm_itemWidth:", mm_itemWidth);
@@ -64,24 +59,20 @@ function montarVitrine() {
     console.log("[Vitrine] Atualizando slider, página atual:", mm_currentPage, "Offset:", mm_offset);
     mm_track.style.transform = `translateX(${mm_offset}px)`;
     console.log("[Vitrine] Transform applied:", mm_track.style.transform);
-
     mm_prevBtn.disabled = mm_currentPage === 0;
     mm_nextBtn.disabled = mm_currentPage >= mm_totalPages - 1;
-
     const mm_allDots = mm_dots.querySelectorAll(".vitrine-dot");
     console.log("[Vitrine] Dots found:", mm_allDots.length);
     mm_allDots.forEach((dot, index) => {
       dot.className = "vitrine-dot" + (index === mm_currentPage ? " active" : "");
     });
   }
-
   function mm_aguardarRenderizacao(callback) {
     let tentativas = 0;
     function verificar() {
       const mm_items = mm_track?.children || [];
       console.log("[Vitrine] Tentativa", tentativas, "Items:", mm_items.length);
       const largura = mm_items.length ? mm_items[0].offsetWidth : 0;
-
       if (largura > 0) {
         console.log("[Vitrine] Render detectado, largura do item:", largura);
         callback();
@@ -96,10 +87,8 @@ function montarVitrine() {
     }
     verificar();
   }
-
   function mm_inserirVitrineAntesDoElemento(mm_produtos) {
     console.log("[Vitrine] Inserindo vitrine com", mm_produtos.length, "produtos");
-
     const mm_style = document.createElement("style");
     mm_style.innerHTML = `
       .vitrine-mymetric {
@@ -272,7 +261,6 @@ function montarVitrine() {
       }
     `;
     document.head.appendChild(mm_style);
-
     const mm_container = document.createElement("div");
     mm_container.className = "vitrine-mymetric";
     mm_container.innerHTML = `
@@ -286,19 +274,15 @@ function montarVitrine() {
       </div>
       <div class="vitrine-dots"></div>
     `;
-
     mm_track = mm_container.querySelector(".vitrine-track");
     console.log("[Vitrine] mm_track initialized:", mm_track);
-
     mm_produtos.forEach(produto => {
       const precoOriginal = parseFloat(produto.price_original.replace(/[^\d,]/g, "").replace(",", "."));
       const preco = parseFloat(produto.price.replace(/[^\d,]/g, "").replace(",", "."));
       const desconto = precoOriginal > preco ? Math.round(((precoOriginal - preco) / precoOriginal) * 100) : null;
-
       const item = document.createElement("a");
       item.className = "vitrine-item";
       item.href = produto.producturl;
-
       item.innerHTML = `
         <div class="vitrine-item-container">
           ${desconto ? `<div class="desconto-label">-${desconto}% <span class="outlet-tag">OUTLET</span></div>` : ""}
@@ -311,22 +295,18 @@ function montarVitrine() {
       `;
       mm_track.appendChild(item);
     });
-
     const mm_alvo = document.querySelector(".vtex-render__container-id-home2 .vtex-rich-text-0-x-container--home-title-carrousel");
     console.log("[Vitrine] Target element (mm_alvo):", mm_alvo);
     if (mm_alvo?.parentNode) {
       mm_alvo.parentNode.insertBefore(mm_container, mm_alvo);
       console.log("[Vitrine] Vitrine inserida antes do elemento alvo.");
     } else {
-      //document.body.appendChild(mm_container);
       console.warn("[Vitrine] Elemento alvo não encontrado, vitrine adicionada ao body.");
     }
-
     console.log("[Vitrine] Window width:", window.innerWidth);
     if (window.innerWidth > 768) {
       mm_aguardarRenderizacao(() => {
         console.log("[Vitrine] Render detectado, iniciando slider.");
-
         mm_itemWidth = mm_track.children[0]?.offsetWidth + 20 || 250; // Fallback width
         console.log("[Vitrine] mm_itemWidth:", mm_itemWidth);
         const mm_visibleWidth = mm_container.querySelector(".vitrine-slider").offsetWidth;
@@ -339,11 +319,9 @@ function montarVitrine() {
         mm_dots = mm_container.querySelector(".vitrine-dots");
         mm_prevBtn = mm_container.querySelector(".prev");
         mm_nextBtn = mm_container.querySelector(".next");
-
         console.log("[Vitrine] mm_dots:", mm_dots);
         console.log("[Vitrine] mm_prevBtn:", mm_prevBtn);
         console.log("[Vitrine] mm_nextBtn:", mm_nextBtn);
-
         mm_prevBtn.onclick = () => {
           console.log("[Vitrine] Previous button clicked, currentPage:", mm_currentPage);
           if (mm_currentPage > 0) {
@@ -351,7 +329,6 @@ function montarVitrine() {
             mm_updateSlider();
           }
         };
-
         mm_nextBtn.onclick = () => {
           console.log("[Vitrine] Next button clicked, currentPage:", mm_currentPage);
           if (mm_currentPage < mm_totalPages - 1) {
@@ -359,7 +336,6 @@ function montarVitrine() {
             mm_updateSlider();
           }
         };
-
         for (let p = 0; p < mm_totalPages; p++) {
           const mm_dot = document.createElement("div");
           mm_dot.className = "vitrine-dot" + (p === 0 ? " active" : "");
@@ -370,7 +346,6 @@ function montarVitrine() {
           };
           mm_dots.appendChild(mm_dot);
         }
-
         mm_updateSlider();
       });
     } else {
