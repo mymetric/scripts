@@ -62,6 +62,8 @@ function mymetric_tracker(domain, measurementId, encoded = false) {
                 fbp: getCookie("_fbp"),
                 fbc: getCookie("_fbc"),
                 gclid: getCookie("_gcl_aw"),
+                awin_channel: getCookie("AwinChannelCookie"),
+                awin_click_id: getCookie("awc"),
                 ua: btoa(navigator.userAgent)
             };
 
