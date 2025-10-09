@@ -77,7 +77,7 @@ function getCookie(name) {
       script.onload = () => {
         console.log("[mm_tracker] gtag carregado");
         gtag("js", new Date());
-        gtag("config", measurementId);
+        gtag("config", measurementId, { send_page_view: false });
         continueTracking();
       };
   
@@ -168,17 +168,31 @@ function getCookie(name) {
     }
   }
 
-  function mymetric_tracker_checkout(slug, token) {
+  function mymetric_tracker_checkout(slug, token, yampi = false) {
 
     const mm_tracker = getCookie("mm_tracker");
+
+    if(yampi) {
+        
+        var event_name = slug+"_yampi_cart_id";
+
+        var payload = {
+          cart_id: token,
+          mm_tracker: mm_tracker
+        };
+        
+    } else {
+        
+        var event_name = slug+"_shopify_checkout_started";
+
+        var payload = {
+          cart_id: token,
+          mm_tracker: mm_tracker ? JSON.parse(mm_tracker) : null
+        };
+        
+    }
     
-    const payload = {
-      event_name: slug+"_shopify_checkout_started",
-      cart_id: token,
-      mm_tracker: mm_tracker ? JSON.parse(mm_tracker) : null
-    };
-  
-    fetch("https://hkdk.events/kpprra7w39ztyk/?event_name="+slug+"_shopify_checkout_started", {
+    fetch("https://hkdk.events/kpprra7w39ztyk/?event_name="+event_name, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

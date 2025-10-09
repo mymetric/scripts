@@ -1,5 +1,5 @@
 //  Função para log estilizado no console
-mymetric_log('🟢 Pixel ready - v2.4');
+mymetric_log('🟢 Pixel ready - v2.3');
 
 if (typeof window.analytics_tools_ids  !== 'undefined') {
     var ga_id = window.analytics_tools_ids.ga;
@@ -32,40 +32,82 @@ function getCookie(name) {
 }
 
 
+window.dataLayer = window.dataLayer || [];
+mymetric_log('🔵 [INIT] DataLayer initialized: ', window.dataLayer);
 
-if (typeof window.gtag !== "function") {
-    console.log("gtag ausente, carregando...");
-
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = function () {
+function gtag() {
+    mymetric_log('🔵 [GTAG] Function called with arguments: ', Array.from(arguments));
     window.dataLayer.push(arguments);
-};
+    mymetric_log('🔵 [GTAG] DataLayer after push: ', window.dataLayer);
+}
 
-const script = document.createElement("script");
-script.async = true;
-script.src = `https://www.googletagmanager.com/gtag/js?id=${ga_id}`;
-
-script.onload = () => {
-  mymetric_log("gtag carregado");
-  gtag("js", new Date());
-  gtag("config", ga_id, { send_page_view: false });
-};
-
-script.onerror = () => {
-  console.warn("Falha ao carregar gtag.js");
-};
-
-document.head.appendChild(script);
-
-setTimeout(() => {
-  if (typeof gtag === "function") {
-    mymetric_log("gtag disponível após fallback, continuando");
-  } else {
-    mymetric_log("Timeout: gtag não disponível após 3s");
-  }
-}, 3000);
+mymetric_log('🔵 [CHECK] Verifying ga_id existence and value');
+if (typeof ga_id !== 'undefined' && ga_id) {
+    mymetric_log('🟢 [CHECK] ga_id is defined: ' + ga_id);
+    mymetric_log('🔵 [ENV] Checking document.head availability: ', !!document.head);
+    
+    try {
+        var mmGtagScript = document.createElement('script');
+        mmGtagScript.async = true;
+        mmGtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + ga_id;
+        mymetric_log('🟢 [SCRIPT] Script element created with src: ' + mmGtagScript.src);
+        mymetric_log('🔵 [SCRIPT] Script async attribute set: ' + mmGtagScript.async);
+        
+        document.head.appendChild(mmGtagScript);
+        mymetric_log('🟢 [SCRIPT] Script successfully appended to document.head');
+        
+        mmGtagScript.onload = function() {
+            mymetric_log('🟢 [SCRIPT] Google Tag script loaded successfully');
+            mymetric_log('🔵 [ENV] Current window.location.href: ' + window.location.href);
+            
+            // Limpar a URL
+            const url = window.location.href;
+            mymetric_log('🔵 [URL] Original URL: ' + url);
+            const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
+            const cleanedUrl = url.replace(regex, '');
+            mymetric_log('🟢 [URL] Cleaned URL: ' + cleanedUrl);
+            
+            try {
+                mymetric_log('🔵 [GTAG] Sending js event with timestamp: ' + new Date().toISOString());
+                gtag('js', new Date());
+                
+                const pagePath = new URL(cleanedUrl).pathname;
+                const pageTitle = document.title || 'Iframe Content';
+                mymetric_log('🔵 [CONFIG] Page path extracted: ' + pagePath);
+                mymetric_log('🔵 [CONFIG] Page title determined: ' + pageTitle);
+                mymetric_log('🔵 [CONFIG] Preparing GA4 config with ga_id: ' + ga_id);
+                
+                gtag('config', ga_id, {
+                    send_page_view: true,
+                    page_location: cleanedUrl,
+                    page_path: pagePath,
+                    page_title: pageTitle
+                });
+                mymetric_log('🟢 [CONFIG] GA4 configured with cleaned URL: ' + cleanedUrl);
+                mymetric_log('🔵 [CONFIG] Config object sent: ', {
+                    send_page_view: true,
+                    page_location: cleanedUrl,
+                    page_path: pagePath,
+                    page_title: pageTitle
+                });
+            } catch (error) {
+                mymetric_log('🔴 [CONFIG] Error during GA4 configuration: ' + error.message);
+                mymetric_log('🔴 [CONFIG] Error stack: ' + error.stack);
+            }
+        };
+        
+        mmGtagScript.onerror = function(error) {
+            mymetric_log('🔴 [SCRIPT] Failed to load Google Tag script: ' + error.type);
+            mymetric_log('🔴 [SCRIPT] Error details: ', error);
+        };
+    } catch (error) {
+        mymetric_log('🔴 [SCRIPT] Error appending script to document.head: ' + error.message);
+        mymetric_log('🔴 [SCRIPT] Error stack: ' + error.stack);
+    }
 } else {
-    mymetric_log("gtag já presente, continuando...");
+    mymetric_log('🔴 [CHECK] ga_id is undefined or falsy');
+    mymetric_log('🔵 [CHECK] typeof ga_id: ' + typeof ga_id);
+    mymetric_log('🔵 [CHECK] ga_id value: ' + ga_id);
 }
 
 
@@ -74,7 +116,7 @@ setTimeout(() => {
 function waitForGA4(callback, timeout = 7000) {
     const start = Date.now();
     const interval = setInterval(() => {
-        if (typeof window.gtag === 'function') {
+        if (typeof gtag === 'function') {
             mymetric_log('🟢 gtag() ready');
             clearInterval(interval);
             callback();
@@ -354,27 +396,27 @@ function mymetric_shopify_pixel(analytics_tools_ids, eventName, eventData) {
 
     // Função para disparar eventos no GA4
     function sendToGA4(eventName, data) {
-    if (!ga_id) {
-        mymetric_log('⚠️ GA4 ID não configurado, evento ignorado: ' + eventName);
-        return;
-    }
-    const gaEventName = convertEvents[eventName].ga;
-    mymetric_log('🚩 Preparando evento GA4: ' + gaEventName + ' | Dados: ' + JSON.stringify(data));
-    waitForGA4(() => {
-        try {
-            mymetric_log('🚀 Enviando evento GA4: ' + gaEventName);
+        if (!ga_id) {
+            mymetric_log('⚠️ GA4 ID não configurado, evento ignorado: ' + eventName);
+            return;
+        }
+        
+        data.send_to = ga_id;
+        //data.debug_mode = true;
+        gaEventName = convertEvents[eventName].ga;
+
+        mymetric_log('🚀 [GA4 Event] ' + ga_id + ' | ' + gaEventName);
+        console.log(cleanEmail, cleanPhone);
+        console.log(data);
+
+        waitForGA4(() => {
             gtag('set', 'user_data', {
                 email: cleanEmail || data.email || undefined,
                 phone_number: cleanPhone || data.phone || undefined
             });
-            data.send_to = ga_id;
             gtag('event', gaEventName, data);
-            mymetric_log('✅ Evento GA4 enviado: ' + gaEventName);
-        } catch (error) {
-            mymetric_log('❌ Erro ao enviar evento GA4: ' + gaEventName + ' | Erro: ' + error.message);
-        }
-    }, 10000); // Aumentado timeout para 10 segundos
-}
+        });
+    }
 
     // Função para disparar eventos no Meta Pixel (Facebook)
     function sendToMeta(eventName, data) {

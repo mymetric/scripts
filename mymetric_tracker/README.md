@@ -21,6 +21,27 @@ mmtr.onload = function() {
 document.head.appendChild(mmtr);
 ```
 
+Se for Yampi, fazer via GTM com esse código:
+
+```html
+<script>
+var mmtr = document.createElement("script");
+mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mymetric_tracker/main.js";
+mmtr.onload = function() {
+    // Configure seu domínio e measurement ID do GA4
+    mymetric_tracker("seu-dominio.com", "G-SEU-MEASUREMENT-ID");
+    
+    var cartId = (typeof checkout !== 'undefined' && checkout.cart && checkout.cart.id) ? checkout.cart.token : null;
+    
+    // Rastrear checkout se URL contiver "seguro"
+    if (window.location.href.includes("seguro")) {
+      mymetric_tracker_checkout("sua-marca", cartId, true);
+    }
+};
+document.head.appendChild(mmtr);
+</script>
+```
+
 ### 📍 Localização no Shopify:
 1. Acesse **Settings > Customer Events**
 2. Cole o código acima no campo de eventos

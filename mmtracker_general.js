@@ -1,4 +1,4 @@
-function mymetric_tracker(domain, measurementId) {
+function mymetric_tracker(domain, measurementId, encoded = false) {
     function fetchGtagFields(measurementId) {
         function gtag(command, measurementId, field, callback) {
             if (typeof window.gtag === 'function') {
@@ -62,10 +62,17 @@ function mymetric_tracker(domain, measurementId) {
                 fbp: getCookie("_fbp"),
                 fbc: getCookie("_fbc"),
                 gclid: getCookie("_gcl_aw"),
+                awin_channel: getCookie("AwinChannelCookie"),
+                awin_click_id: getCookie("awc"),
                 ua: btoa(navigator.userAgent)
             };
 
             var cookiesJson = JSON.stringify(cookies);
+            
+            if(encoded) {
+                var cookiesJson = encodeURIComponent(cookiesJson);
+            }
+            
             set_cookie("mm_tracker", cookiesJson, 365, domain);
         } else {
             console.log('Skipping mm_tracker cookie creation: client_id or session_id is null');

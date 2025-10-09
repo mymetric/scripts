@@ -1,3 +1,5 @@
+// v 1.0
+
 function getCookie(name) {
   var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
   if (match) {
@@ -283,13 +285,13 @@ function createPopup(
     var errors = [];
 
     if (!name) {
-      errors.push('Nome Ã© obrigatÃ³rio.');
+      errors.push('Nome obrigatório.');
     }
 
     if (!email) {
-      errors.push('Email Ã© obrigatÃ³rio.');
+      errors.push('Email obrigatório.');
     } else if (!validateEmail(email)) {
-      errors.push('Email invÃ¡lido.');
+      errors.push('Email inválido.');
     }
 
     if (errors.length > 0) {
@@ -304,10 +306,11 @@ function createPopup(
       });
     } else {
       var mmTracker = getCookie('mm_tracker');
-      var formData = JSON.stringify({ 
+      var formData = JSON.stringify({
+        source: "popup",
         name: name,
         email: email,
-        phone: phone,
+        phone: phone.replace(/\D/g, ""),
         mm_tracker: mmTracker,
         title_text: titleText,
         subtitle_text: subtitleText,
