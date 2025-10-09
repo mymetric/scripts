@@ -16,7 +16,7 @@ Este é um script para integração do MyMetric com a Shopify utilizando Custome
 
 ```js
 var mmtr = document.createElement("script");
-mmtr.src = "https://mymetric.com.br/shopify_onetag.js";
+mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/shopify_onetag/main.js";
 document.head.appendChild(mmtr);
 
 var ids = ["G-0KME5VNC5L"];
