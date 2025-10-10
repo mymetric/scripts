@@ -175,6 +175,13 @@ function trackGA4Event(eventName, eventData) {
   }
 }
 
+// 📘 Função centralizada para disparos do Meta Pixel
+function trackMetaEvent(eventName, eventData = {}) {
+  if (window.fbq) {
+    window.fbq('track', eventName, eventData);
+  }
+}
+
 // 📊 Função para enviar logs ao Better Stack
 function sendToBetterStack(message, customerSlug, debugMode = false) {
   const timestamp = new Date().toISOString();
@@ -312,7 +319,7 @@ function initGA4(ga4Ids, debugMode = false) {
   
     // Carregar gtag.js dinamicamente
     var gtagScript = document.createElement("script");
-  gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4Ids[0]}`;
+    gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${ga4Ids[0]}`;
     gtagScript.async = true;
     document.head.appendChild(gtagScript);
   
@@ -334,9 +341,39 @@ function initGA4(ga4Ids, debugMode = false) {
 // 📘 Inicializar Meta Pixel
 function initMetaPixel(metaIds, debugMode = false) {
   if (debugMode) {
-    console.log(`%c  📘 Meta Pixel IDs: ${metaIds.join(', ')}`, 'color: #1877f2; font-size: 10px;');
+    console.log(`%c  📘 Carregando Meta Pixel para: ${metaIds.join(', ')}`, 'color: #1877f2; font-size: 10px;');
   }
-  // TODO: Implementar Meta Pixel
+
+  // Carregar Meta Pixel base code
+  !function(f,b,e,v,n,t,s) {
+    if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)
+  }(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+
+  // Expor fbq globalmente
+  window.fbq = window.fbq || function() {
+    (window.fbq.queue = window.fbq.queue || []).push(arguments);
+  };
+
+  // Inicializar todos os pixels
+  metaIds.forEach(id => {
+    // Remover prefixo "meta_" ou "fb_" se existir
+    const cleanId = id.replace(/^(meta_|fb_)/, '');
+    
+    window.fbq('init', cleanId);
+    
+    if (debugMode) {
+      console.log(`%c  ✅ Meta Pixel configurado: ${cleanId}`, 'color: #10b981; font-size: 10px;');
+    }
+  });
+
+  // Enviar PageView inicial
+  window.fbq('track', 'PageView');
 }
 
 // 🎵 Inicializar TikTok Pixel
@@ -372,6 +409,8 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
         page_title: event.context.document.title
     });
     
+    trackMetaEvent("PageView");
+    
     sendToBetterStack(`Page viewed: ${event.context.document.title}`, customerSlug, debugMode);
   }
 
@@ -394,6 +433,14 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
           price: event.data.productVariant?.price?.amount
         }]
       });
+    
+    trackMetaEvent("ViewContent", {
+      content_name: product?.title,
+      content_ids: [product?.id],
+      content_type: 'product',
+      value: event.data.productVariant?.price?.amount,
+      currency: event.data.productVariant?.price?.currencyCode || 'USD'
+    });
     
     sendToBetterStack(`Product viewed: ${product?.title} - ${product?.vendor}`, customerSlug, debugMode);
   }
@@ -425,6 +472,18 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
         }]
       });
     
+    trackMetaEvent("AddToCart", {
+      content_name: product?.title,
+      content_ids: [product?.id],
+      content_type: 'product',
+      value: cartLine?.cost?.totalAmount?.amount,
+      currency: cartLine?.merchandise?.price?.currencyCode || 'USD',
+      contents: [{
+        id: product?.id,
+        quantity: cartLine?.quantity
+      }]
+    });
+    
     sendToBetterStack(`Added to cart: ${product?.title} (${cartLine?.quantity}x) - ${cartLine?.cost?.totalAmount?.amount}`, customerSlug, debugMode);
   }
 
@@ -438,6 +497,12 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
         currency: event.data.checkout?.currencyCode,
         value: event.data.checkout?.totalPrice?.amount
       });
+    
+    trackMetaEvent("InitiateCheckout", {
+      value: event.data.checkout?.totalPrice?.amount,
+      currency: event.data.checkout?.currencyCode || 'USD',
+      num_items: event.data.checkout?.lineItems?.length || 0
+    });
     
     sendToBetterStack(`Checkout started: ${event.data.checkout?.totalPrice?.amount} ${event.data.checkout?.currencyCode}`, customerSlug, debugMode);
   }
@@ -453,6 +518,11 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       currency: event.data.checkout?.currencyCode,
       value: event.data.checkout?.totalPrice?.amount,
       payment_type: event.data.paymentMethod?.type
+    });
+    
+    trackMetaEvent("AddPaymentInfo", {
+      value: event.data.checkout?.totalPrice?.amount,
+      currency: event.data.checkout?.currencyCode || 'USD'
     });
     
     sendToBetterStack(`Payment info submitted: ${event.data.paymentMethod?.type} - ${event.data.checkout?.totalPrice?.amount} ${event.data.checkout?.currencyCode}`, customerSlug, debugMode);
@@ -519,6 +589,13 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       }))
     });
     
+    trackMetaEvent("ViewCart", {
+      value: cart?.cost?.totalAmount?.amount,
+      currency: cart?.cost?.totalAmount?.currencyCode || 'USD',
+      num_items: cart?.lines?.length || 0,
+      content_ids: cart?.lines?.map(line => line?.merchandise?.product?.id) || []
+    });
+    
     sendToBetterStack(`Cart viewed: ${cart?.cost?.totalAmount?.amount} ${cart?.cost?.totalAmount?.currencyCode} (${cart?.lines?.length || 0} items)`, customerSlug, debugMode);
   }
 
@@ -578,6 +655,12 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       }))
     });
     
+    trackMetaEvent("ViewCategory", {
+      content_name: collection?.title,
+      content_category: collection?.title,
+      content_ids: collection?.productVariants?.slice(0, 10).map(v => v?.product?.id) || []
+    });
+    
     sendToBetterStack(`Collection viewed: ${collection?.title}`, customerSlug, debugMode);
   }
 
@@ -606,6 +689,17 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       }]
     });
     
+    // Meta Pixel doesn't have a standard RemoveFromCart event, using custom event
+    if (window.fbq) {
+      window.fbq('trackCustom', 'RemoveFromCart', {
+        content_name: product?.title,
+        content_ids: [product?.id],
+        content_type: 'product',
+        value: cartLine?.cost?.totalAmount?.amount,
+        currency: cartLine?.cost?.totalAmount?.currencyCode || 'USD'
+      });
+    }
+    
     sendToBetterStack(`Product removed from cart: ${product?.title} - ${cartLine?.cost?.totalAmount?.amount} ${cartLine?.cost?.totalAmount?.currencyCode}`, customerSlug, debugMode);
   }
 
@@ -627,6 +721,11 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
         item_category: variant?.product?.type,
         price: variant?.price?.amount
       }))
+    });
+    
+    trackMetaEvent("Search", {
+      search_string: searchResult?.query,
+      content_ids: searchResult?.productVariants?.slice(0, 10).map(v => v?.product?.id) || []
     });
     
     sendToBetterStack(`Search submitted: "${searchResult?.query}"`, customerSlug, debugMode);
