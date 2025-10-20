@@ -230,7 +230,7 @@ function sendToBetterStack(message, customerSlug, pageLocation = null, pageTitle
   });
 }
 // 🚀 Função principal do MyMetric OneTag Shopify
-function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = true) {
+function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = true, event = false) {
   // Log de inicialização
   if (debugMode) {
     console.log(
@@ -274,7 +274,7 @@ function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = tru
     if (debugMode) {
       console.log(`%c✅ Inicializando GA4 com ${ga4Ids.length} ID(s)`, 'color: #10b981; font-size: 11px;');
     }
-    initGA4(ga4Ids, debugMode);
+    initGA4(ga4Ids, debugMode, event);
   }
   // Inicializar Meta Pixel se houver IDs
   if (metaIds.length > 0) {
@@ -310,7 +310,7 @@ function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = tru
   }
 }
 // 📊 Inicializar GA4
-function initGA4(ga4Ids, debugMode = false) {
+function initGA4(ga4Ids, debugMode = false, event = false) {
   if (debugMode) {
     console.log(`%c 📊 Carregando gtag.js para: ${ga4Ids[0]}`, 'color: #3b82f6; font-size: 10px;');
   }
