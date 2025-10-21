@@ -326,14 +326,19 @@ function initGA4(ga4Ids, debugMode = false, event = false) {
     function gtag(){ dataLayer.push(arguments); }
     window.gtag = gtag; // expõe globalmente
     gtag("js", new Date());
+
+    const url = window.location.href;
+    const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
+    const cleanedUrl = url.replace(regex, '');
  
   // Configurar todos os IDs do GA4
   ga4Ids.forEach(id => {
     
     gtag("config", id, {
       send_page_view: false,
-      page_location: event.context.document.location.href,
-      page_title: event.context.document.title
+      page_location: cleanedUrl,
+      page_path: new URL(cleanedUrl).pathname,
+      page_title: document.title || 'Iframe Content'
     });
     
     if (debugMode) {
