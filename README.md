@@ -146,7 +146,7 @@ document.head.appendChild(mmtr);
 
 ## VTEX Coupon Tracker
 
-```
+```html
 <script type="text/javascript">
  
 var mmtr = document.createElement("script");
@@ -155,3 +155,5 @@ document.head.appendChild(mmtr);
   
 </script>
 ```
+Setup GTM
+![setup gtm](https://i.imgur.com/XIFHSiN.png)
