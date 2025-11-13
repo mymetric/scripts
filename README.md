@@ -146,6 +146,7 @@ document.head.appendChild(mmtr);
 
 ## VTEX Coupon Tracker
 
+Rode esse código no checkout VTEX
 ```html
 <script type="text/javascript">
  
@@ -155,5 +156,5 @@ document.head.appendChild(mmtr);
   
 </script>
 ```
-Setup GTM
+Depois configure a tag no GTM
 ![setup gtm](https://i.imgur.com/XIFHSiN.png)
