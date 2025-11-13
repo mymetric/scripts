@@ -144,3 +144,14 @@ document.head.appendChild(mmtr);
 </script>
 ```
 
+## VTEX Coupon Tracker
+
+```
+<script type="text/javascript">
+ 
+var mmtr = document.createElement("script");
+mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/vtex_coupon.js";
+document.head.appendChild(mmtr);
+  
+</script>
+```
