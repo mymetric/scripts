@@ -93,6 +93,13 @@ function createPopup(
     container.style.height = '97%';
   }
 
+  if (window.innerHeight < 610) {
+    image.remove();
+    if (!isMobileDevice()) {
+      formContainer.style.width = '100%';
+    }
+  }
+
   var image = document.createElement('img');
   image.setAttribute('src', imgUrl);
   image.style.objectFit = 'cover';
