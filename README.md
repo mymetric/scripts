@@ -1,6 +1,6 @@
 # scripts
 
-## MyMetric Tracker
+## MyMetric Tracker for General Sites
 
 ```html
 <script type="text/javascript">
@@ -13,6 +13,21 @@ mmtr.onload = function() {
 };
 document.head.appendChild(mmtr);
   
+</script>
+```
+
+## MyMetric Tracker for VTEX
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/mymetric/scripts@main/mmtracker_vtex.js"></script>
+<script>
+MyMetric.init({
+    domain: 'seculus.com.br',
+    measurementId: 'G-TVZND09S9K',
+    encoded: true,
+    vtexEndpoint: 'https://hkdk.events/zx3xort8f8hh7y',
+    clientName: 'seculus'
+});
 </script>
 ```
 
