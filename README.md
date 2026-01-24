@@ -26,7 +26,7 @@ MyMetric.init({
     measurementId: 'G-TVZND09S9K',
     encoded: true,
     vtexEndpoint: 'https://hkdk.events/zx3xort8f8hh7y',
-    clientName: 'seculus'
+    slug: 'seculus'
 });
 </script>
 ```
