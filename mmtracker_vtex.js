@@ -245,7 +245,8 @@
         console.log('MyMetric: Página de checkout detectada, iniciando VTEX cart');
 
         var endpoint = config.endpoint;
-        var clientName = config.clientName;
+        var slug = config.slug;
+        var eventName = slug + '_vtex_cart';
         var maxRetries = config.maxRetries || 10;
         var retryCount = 0;
 
@@ -266,14 +267,14 @@
 
         function sendData(orderFormId, mmTrackerCookie) {
             var data = JSON.stringify({
-                event_name: clientName + '_vtex_cart',
+                event_name: eventName,
                 event_params: {
                     order_form_id: orderFormId,
                     mm_tracker: mmTrackerCookie
                 }
             });
 
-            fetch(endpoint, {
+            fetch(endpoint + '?event_name=' + eventName, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -282,7 +283,7 @@
             })
             .then(function(response) {
                 if (response.ok) {
-                    console.log('MyMetric: VTEX cart data sent successfully');
+                    console.log('MyMetric: VTEX cart data sent successfully (' + eventName + ')');
                 } else {
                     console.error('MyMetric: Failed to send VTEX cart data');
                     retry();
@@ -341,10 +342,10 @@
         });
 
         // Inicializa VTEX Cart se configurado
-        if (config.vtexEndpoint && config.clientName) {
+        if (config.vtexEndpoint && config.slug) {
             initVtexCart({
-                endpoint: config.vtexEndpoint + '?event_name=' + config.clientName + '_vtex_cart',
-                clientName: config.clientName,
+                endpoint: config.vtexEndpoint,
+                slug: config.slug,
                 maxRetries: config.maxRetries || 10
             });
         }
