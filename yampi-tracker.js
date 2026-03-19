@@ -3,7 +3,9 @@
 // Instalar no front da loja que usa Yampi checkout
 
 (function () {
-  var SLUG = ""; // Preencher com o slug do cliente, ex: "gringa"
+  var script = document.currentScript || document.querySelector('script[data-slug][src*="yampi"]');
+  var SLUG = script && script.getAttribute("data-slug");
+  if (!SLUG) return console.warn("[yampi-tracker] data-slug não informado");
   var ENDPOINT = "https://events.mymetric.app/posts";
   var POLL_INTERVAL = 500;
   var MAX_ATTEMPTS = 60; // 30s máximo
