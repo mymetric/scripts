@@ -173,3 +173,19 @@ document.head.appendChild(mmtr);
 ```
 Depois configure a tag no GTM
 ![setup gtm](https://i.imgur.com/XIFHSiN.png)
+
+## Yampi Cart Tracker
+
+Envia o evento `yampi_cart_id` associando o carrinho da Yampi ao `mm_tracker` do GA4 para atribuição de sessão.
+
+```html
+<script type="text/javascript">
+
+var mmtr = document.createElement("script");
+mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/yampi-tracker.js";
+document.head.appendChild(mmtr);
+
+</script>
+```
+
+> **Importante:** antes de instalar, edite a variável `SLUG` no início do script com o slug do cliente (ex: `"gringa"`).
