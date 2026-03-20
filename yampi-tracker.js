@@ -1,20 +1,10 @@
 // Yampi Cart Tracker - MyMetric
 // Envia yampi_cart_id para events.mymetric.app/posts
-// Instalar no front da loja que usa Yampi checkout
+// Uso via GTM: window.mmYampiSlug = "benditacanfora"; seguido do carregamento dinâmico
 
 (function () {
-  var script = document.currentScript || document.querySelector('script[data-slug][src*="yampi-tracker"]');
-  var SLUG = script && script.getAttribute("data-slug");
-  if (!SLUG) {
-    var scripts = document.getElementsByTagName("script");
-    for (var i = 0; i < scripts.length; i++) {
-      if (scripts[i].getAttribute("data-slug") && (scripts[i].src || "").indexOf("yampi") !== -1) {
-        SLUG = scripts[i].getAttribute("data-slug");
-        break;
-      }
-    }
-  }
-  if (!SLUG) return console.warn("[yampi-tracker] data-slug não informado");
+  var SLUG = window.mmYampiSlug;
+  if (!SLUG) return console.warn("[yampi-tracker] window.mmYampiSlug não definido");
   var ENDPOINT = "https://events.mymetric.app/posts";
   var POLL_INTERVAL = 500;
   var MAX_ATTEMPTS = 60; // 30s máximo
@@ -86,10 +76,5 @@
     }, POLL_INTERVAL);
   }
 
-  // Inicia quando o DOM estiver pronto
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", trySync);
-  } else {
-    trySync();
-  }
+  trySync();
 })();
