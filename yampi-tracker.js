@@ -3,8 +3,17 @@
 // Instalar no front da loja que usa Yampi checkout
 
 (function () {
-  var script = document.currentScript || document.querySelector('script[data-slug][src*="yampi"]');
+  var script = document.currentScript || document.querySelector('script[data-slug][src*="yampi-tracker"]');
   var SLUG = script && script.getAttribute("data-slug");
+  if (!SLUG) {
+    var scripts = document.getElementsByTagName("script");
+    for (var i = 0; i < scripts.length; i++) {
+      if (scripts[i].getAttribute("data-slug") && (scripts[i].src || "").indexOf("yampi") !== -1) {
+        SLUG = scripts[i].getAttribute("data-slug");
+        break;
+      }
+    }
+  }
   if (!SLUG) return console.warn("[yampi-tracker] data-slug não informado");
   var ENDPOINT = "https://events.mymetric.app/posts";
   var POLL_INTERVAL = 500;
