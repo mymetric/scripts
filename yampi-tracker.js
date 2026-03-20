@@ -25,21 +25,10 @@
 
   function getYampiCartId() {
     try {
-      var cookies = document.cookie.split(";");
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = cookies[i].trim();
-        if (cookie.indexOf("yampiCart=") === 0) {
-          return cookie.substring("yampiCart=".length);
-        }
+      if (window.checkout && window.checkout.cart && window.checkout.cart.token) {
+        return window.checkout.cart.token;
       }
     } catch (e) {}
-
-    // Fallback: tenta pegar do localStorage
-    try {
-      var cart = localStorage.getItem("yampi_cart_token");
-      if (cart) return cart;
-    } catch (e) {}
-
     return null;
   }
 
