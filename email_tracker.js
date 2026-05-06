@@ -1,6 +1,6 @@
 function email_tracker(sourceParam, emailSelector) {
 
-  var postUrl = 'https://events.mymetric.app/posts?source=' + encodeURIComponent(sourceParam);
+  var postUrl = 'https://events.mymetric.app/posts?event_name=' + encodeURIComponent(sourceParam);
 
   function setCookie(name, value, days) {
     var expires = "";
