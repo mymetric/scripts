@@ -95,3 +95,17 @@ function new_experiment(id, name, experimentCallback) {
         experimentCallback(id);
     }
 }
+
+// Iwannasleep: load AB tests unconditionally (bypass legacy callback gating).
+// Hostname-gated so other clients are unaffected. Idempotent guard inside
+// iws-ab-tests.js itself prevents duplicate impressions if multiple
+// injection paths fire.
+(function () {
+  if (typeof window === 'undefined' || !window.location) return;
+  if (window.location.hostname.indexOf('iwannasleep') === -1) return;
+  if (document.querySelector('script[src*="iws-ab-tests.js"]')) return;
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/gh/mymetric/iws@main/iws-ab-tests.js';
+  s.async = true;
+  (document.head || document.documentElement).appendChild(s);
+})();
