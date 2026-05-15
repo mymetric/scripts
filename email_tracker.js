@@ -70,6 +70,8 @@ function email_tracker(sourceParam, emailSelector) {
       email: emailValue
     });
 
+    gtag('event', 'generate_lead');
+
     console.log('[email_tracker] GA4 — user_data definido:', emailValue);
   }
 
