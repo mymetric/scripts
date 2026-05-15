@@ -53,6 +53,7 @@
     function isCartOrCheckoutPage() {
         var url = window.location.href.toLowerCase();
         return url.indexOf('/cart') > -1
+            || url.indexOf('/carrinho') > -1
             || url.indexOf('/checkout') > -1
             || url.indexOf('/confirmation') > -1;
     }
