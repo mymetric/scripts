@@ -49,7 +49,6 @@ function new_experiment(id, name, experimentCallback) {
     if (name === undefined) name = null;
 
     var cookie_name = "mm_exp_id_" + id;
-
     var exp = get_cookie(cookie_name);
     var exp_id = '';
     var variant = '';
@@ -68,31 +67,36 @@ function new_experiment(id, name, experimentCallback) {
         set_cookie(cookie_name, id + "." + variant, 365);
     }
 
+    // Função que executa a variante — só chamada após confirmação do GA
+    function runVariant() {
+        if (variant == '0') {
+            if (typeof experiment_original !== 'undefined') {
+                experiment_original();
+            }
+        }
+        if (variant == '1') {
+            experimentCallback(id);
+        }
+    }
+
     if (typeof gtag == 'function') {
         gtag("event", "experiment_impression", {
             experiment_id: id,
             experiment_variant: variant,
-            experiment_name: name
+            experiment_name: name,
+            event_callback: runVariant,          // GA chama isso após confirmar envio
+            event_timeout: 500                   // fallback: executa após 500ms de qualquer forma
         });
     } else {
         dataLayer.push({
             event: "experiment_impression",
             experiment_id: id,
             experiment_variant: variant,
-            experiment_name: name
+            experiment_name: name,
+            eventCallback: runVariant,           // equivalente no GTM
+            eventTimeout: 500
         });
-    }
-
-    if (variant == '0') {
-        if (typeof experiment_original !== 'undefined') {
-            console.log('test0');
-            experiment_original();
-        }
-    }
-
-    if (variant == '1') {
-        console.log('test1');
-        experimentCallback(id);
+        runVariant(); // dataLayer não garante callback; chama direto como fallback
     }
 }
 
