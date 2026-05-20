@@ -51,9 +51,9 @@ function getCookie(name) {
     return null;
   }
   
-  function mymetric_tracker(domain, measurementId, useFpid = false) {
-    console.log("[mm_tracker] Iniciando rastreamento", useFpid ? "(modo FPID)" : "");
-
+  function mymetric_tracker(domain, measurementId) {
+    console.log("[mm_tracker] Iniciando rastreamento");
+  
     const trackedParams = ["ttclid", "msclkid"];
     trackedParams.forEach(param => {
       const value = getUrlParameter(param);
@@ -61,17 +61,7 @@ function getCookie(name) {
         setCookie("_" + param, value, 365, domain);
       }
     });
-
-    if (useFpid) {
-      const fpid = getCookie("FPID");
-      if (!fpid) {
-        console.warn("[mm_tracker] FPID indisponível, abortando (modo useFpid sem fallback de GA4)");
-        return;
-      }
-      buildAndStoreTracker(fpid, extractSessionIdFromGaCookie());
-      return;
-    }
-
+  
     if (typeof window.gtag !== "function") {
       console.log("[mm_tracker] gtag ausente, carregando...");
   
