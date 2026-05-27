@@ -144,7 +144,7 @@ var disablePhoneField = false;
 </script>
 ```
 
-## MyMetric Email Tracker
+## MyMetric Email & Phone Tracker
 
 ```html
 <script type="text/javascript">
@@ -152,7 +152,11 @@ var disablePhoneField = false;
 var mmtr = document.createElement("script");
 mmtr.src = "https://cdn.jsdelivr.net/gh/mymetric/scripts@main/email_tracker.js";
 mmtr.onload = function() {
-    email_tracker('havaianas_popup_subscribe', 'input[type="email"], #input-email');
+    email_tracker(
+       'havaianas_popup_subscribe', // event id
+       'input[type="email"], #input-email' // email inputs selector
+       'input[type="tel"]' // phone inputs selector
+    );
 };
 document.head.appendChild(mmtr);
   
