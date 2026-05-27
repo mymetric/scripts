@@ -1,7 +1,73 @@
-function email_tracker(sourceParam, emailSelector, phoneSelector) {
-  var postUrl = 'https://events.mymetric.app/posts?event_name=' + encodeURIComponent(sourceParam);
+// ─── Seletores globais padrão ────────────────────────────────────────────────
 
-  // ─── Cookies ────────────────────────────────────────────────────────────────
+var DEFAULT_EMAIL_SELECTORS = [
+  'input[type="email"]',
+  '#input-email',
+  'input[class*="mail"]',
+  'input[id*="mail"]',
+  'input[name*="mail"]',
+  'input[placeholder*="mail"]',
+  'input[placeholder*="Mail"]'
+].join(', ');
+
+var DEFAULT_PHONE_SELECTORS = [
+  'input[type="tel"]',
+  'input[class*="phone"]',
+  'input[id*="phone"]',
+  'input[class*="tel"]',
+  'input[id*="tel"]',
+  'input[class*="fone"]',
+  'input[id*="fone"]',
+  'input[name*="phone"]',
+  'input[name*="tel"]',
+  'input[name*="fone"]',
+  'input[placeholder*="telefone"]',
+  'input[placeholder*="Telefone"]',
+  'input[placeholder*="celular"]',
+  'input[placeholder*="Celular"]'
+].join(', ');
+
+// ─── Sufixo fixo do evento ───────────────────────────────────────────────────
+
+var EVENT_SUFFIX = '_popup_subscribe';
+
+// ─── Função principal ────────────────────────────────────────────────────────
+
+/**
+ * @param {string} clientName      Nome do cliente (ex: "nike", "pepsi"). O event_name
+ *                                 enviado será "{clientName}_popup_subscribe".
+ * @param {string} [extraEmail]    Seletores CSS adicionais para campos de e-mail
+ *                                 (opcional — serão somados aos padrões).
+ * @param {string} [extraPhone]    Seletores CSS adicionais para campos de telefone
+ *                                 (opcional — serão somados aos padrões).
+ *
+ * Exemplos de uso:
+ *
+ *   // Apenas com o nome do cliente (usa seletores padrão):
+ *   email_tracker('nike');
+ *
+ *   // Com seletores extras de e-mail:
+ *   email_tracker('nike', '#meu-campo-email');
+ *
+ *   // Com seletores extras de e-mail e telefone:
+ *   email_tracker('nike', '#meu-campo-email', '#meu-campo-tel');
+ */
+function email_tracker(clientName, extraEmail, extraPhone) {
+  var eventName = clientName.slice(-EVENT_SUFFIX.length) === EVENT_SUFFIX
+    ? clientName
+    : clientName + EVENT_SUFFIX;
+  var postUrl = 'https://events.mymetric.app/posts?event_name=' + encodeURIComponent(eventName);
+
+  // Combina seletores padrão com os extras informados (se houver)
+  var emailSelector = extraEmail
+    ? DEFAULT_EMAIL_SELECTORS + ', ' + extraEmail
+    : DEFAULT_EMAIL_SELECTORS;
+
+  var phoneSelector = extraPhone
+    ? DEFAULT_PHONE_SELECTORS + ', ' + extraPhone
+    : DEFAULT_PHONE_SELECTORS;
+
+  // ─── Cookies ───────────────────────────────────────────────────────────────
 
   function setCookie(name, value, days) {
     var expires = '';
@@ -19,20 +85,15 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     return null;
   }
 
-  /**
-   * Verifica se o evento de conversão (generate_lead / Lead) já foi disparado
-   * nesta sessão. Usa cookie sem data de expiração (some ao fechar o browser).
-   */
   function hasConversionFired() {
     return getCookie('mm_lead_fired') === '1';
   }
 
   function markConversionFired() {
-    // Sem parâmetro `days` → cookie de sessão
     setCookie('mm_lead_fired', '1');
   }
 
-  // ─── Hash ───────────────────────────────────────────────────────────────────
+  // ─── Hash ──────────────────────────────────────────────────────────────────
 
   function sha256hex(str) {
     if (!window.crypto || !window.crypto.subtle) {
@@ -47,12 +108,8 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     });
   }
 
-  // ─── Normalização ────────────────────────────────────────────────────────────
+  // ─── Normalização ──────────────────────────────────────────────────────────
 
-  /**
-   * Normalização de e-mail (igual ao comportamento original).
-   * Retorna { normalized, hashed }.
-   */
   function normalizeAndHashEmail(raw) {
     var normalized = raw.trim().toLowerCase();
     return sha256hex(normalized).then(function (hashed) {
@@ -60,29 +117,13 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     });
   }
 
-  /**
-   * Normalização de telefone conforme especificação de cada endpoint:
-   *
-   *   MyMetric → E.164 simplificado: mantém "+" inicial + apenas dígitos
-   *   GA4      → remove não-dígitos → adiciona prefixo "+" → SHA-256
-   *   Meta     → remove não-dígitos → remove zeros à esquerda → SHA-256
-   *
-   * Retorna { forMyMetric, forGA4hash, forMetaHash }.
-   */
   function normalizeAndHashPhone(raw) {
-    // Remove espaços e pontuação, preserva "+" somente se for o primeiro caractere
     var stripped = raw.trim();
-
     var hasPlus = stripped.charAt(0) === '+';
     var digitsOnly = stripped.replace(/\D/g, '');
 
-    // MyMetric: E.164 simplificado
     var forMyMetric = (hasPlus ? '+' : '') + digitsOnly;
-
-    // GA4: remove não-dígitos e adiciona "+" como prefixo
     var forGA4 = '+' + digitsOnly;
-
-    // Meta: apenas dígitos, sem zeros à esquerda (leading zeros)
     var forMeta = digitsOnly.replace(/^0+/, '');
 
     return Promise.all([
@@ -97,7 +138,7 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     });
   }
 
-  // ─── MyMetric ────────────────────────────────────────────────────────────────
+  // ─── MyMetric ──────────────────────────────────────────────────────────────
 
   function sendToMyMetric(value) {
     var mmTracker = getCookie('mm_tracker');
@@ -118,15 +159,8 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     xhr.send(formData);
   }
 
-  // ─── GA4 ─────────────────────────────────────────────────────────────────────
+  // ─── GA4 ───────────────────────────────────────────────────────────────────
 
-  /**
-   * Envia user_data ao GA4 e dispara generate_lead apenas na primeira captura
-   * da sessão (seja e-mail ou telefone).
-   *
-   * @param {Object} userData  Campos aceitos: email, sha256_email_address,
-   *                           phone_number, sha256_phone_number
-   */
   function sendToGA4(userData) {
     if (typeof gtag !== 'function') {
       console.warn('[tracker] GA4 — gtag não encontrado.');
@@ -142,14 +176,8 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     }
   }
 
-  // ─── Meta Pixel ──────────────────────────────────────────────────────────────
+  // ─── Meta Pixel ────────────────────────────────────────────────────────────
 
-  /**
-   * Envia Advanced Matching ao Meta Pixel e dispara Lead apenas na primeira
-   * captura da sessão (seja e-mail ou telefone).
-   *
-   * @param {Object} userData  Campos aceitos: em (hash e-mail), ph (hash tel)
-   */
   function sendToMetaPixel(userData) {
     if (typeof fbq !== 'function') {
       console.warn('[tracker] Meta Pixel — fbq não encontrado.');
@@ -165,13 +193,12 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
       fbq('track', 'Lead', {}, { user_data: userData });
       console.log('[tracker] Meta Pixel — Lead disparado com user_data:', userData);
     } else {
-      // Enriquece sem disparar evento duplicado
       fbq('init', undefined, userData);
       console.log('[tracker] Meta Pixel — Advanced Matching atualizado (sem evento):', userData);
     }
   }
 
-  // ─── Captura de E-mail ────────────────────────────────────────────────────────
+  // ─── Captura de E-mail ─────────────────────────────────────────────────────
 
   function logEmailOnChange(input) {
     if (input._emailListenerAttached) return;
@@ -184,16 +211,13 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
       setCookie('mm_email', btoa(rawEmail), 365);
 
       normalizeAndHashEmail(rawEmail).then(function (result) {
-        // MyMetric recebe texto plano (comportamento original)
         sendToMyMetric(result.normalized);
 
-        // GA4: prefere hash; fallback para texto plano se crypto.subtle indisponível
         var ga4UserData = result.hashed
           ? { sha256_email_address: result.hashed }
           : { email: result.normalized };
         sendToGA4(ga4UserData);
 
-        // Meta: envia hash se disponível
         if (result.hashed) {
           sendToMetaPixel({ em: result.hashed });
         }
@@ -206,7 +230,7 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     });
   }
 
-  // ─── Captura de Telefone ──────────────────────────────────────────────────────
+  // ─── Captura de Telefone ───────────────────────────────────────────────────
 
   function logPhoneOnChange(input) {
     if (input._phoneListenerAttached) return;
@@ -219,16 +243,13 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
       setCookie('mm_phone', btoa(rawPhone), 365);
 
       normalizeAndHashPhone(rawPhone).then(function (result) {
-        // MyMetric: E.164 simplificado, texto plano
         sendToMyMetric(result.forMyMetric);
 
-        // GA4: sha256_phone_number (remove não-dígitos + prefixo "+", hasheado)
         var ga4UserData = result.forGA4hash
           ? { sha256_phone_number: result.forGA4hash }
           : { phone_number: '+' + rawPhone.replace(/\D/g, '') };
         sendToGA4(ga4UserData);
 
-        // Meta: ph (dígitos sem zeros à esquerda, hasheado)
         if (result.forMetaHash) {
           sendToMetaPixel({ ph: result.forMetaHash });
         }
@@ -241,24 +262,20 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
     });
   }
 
-  // ─── Scan & Observer ─────────────────────────────────────────────────────────
+  // ─── Scan & Observer ───────────────────────────────────────────────────────
 
   function deepScan(root) {
     if (!root) return;
 
     try {
-      if (emailSelector) {
-        var emailFields = root.querySelectorAll(emailSelector);
-        for (var i = 0; i < emailFields.length; i++) {
-          logEmailOnChange(emailFields[i]);
-        }
+      var emailFields = root.querySelectorAll(emailSelector);
+      for (var i = 0; i < emailFields.length; i++) {
+        logEmailOnChange(emailFields[i]);
       }
 
-      if (phoneSelector) {
-        var phoneFields = root.querySelectorAll(phoneSelector);
-        for (var j = 0; j < phoneFields.length; j++) {
-          logPhoneOnChange(phoneFields[j]);
-        }
+      var phoneFields = root.querySelectorAll(phoneSelector);
+      for (var j = 0; j < phoneFields.length; j++) {
+        logPhoneOnChange(phoneFields[j]);
       }
     } catch (e) {
       // Alguns tipos de nó podem lançar exceção no querySelectorAll
@@ -274,8 +291,8 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
 
   function matchesAnySelector(node) {
     if (!node.matches) return false;
-    if (emailSelector && node.matches(emailSelector)) return 'email';
-    if (phoneSelector && node.matches(phoneSelector)) return 'phone';
+    if (node.matches(emailSelector)) return 'email';
+    if (node.matches(phoneSelector)) return 'phone';
     return false;
   }
 
@@ -303,11 +320,8 @@ function email_tracker(sourceParam, emailSelector, phoneSelector) {
   observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// Iwannasleep: load AB tests unconditionally (bypass legacy callback gating).
-// Hostname-gated so other clients are unaffected. Idempotent guard inside
-// iws-ab-tests.js itself prevents duplicate runs if multiple injection paths
-// fire. Duplicated also in experiment.js bottom — whichever loads first
-// triggers the load.
+// ─── IWannaSleep AB Tests ──────────────────────────────────────────────────────
+
 (function () {
   if (typeof window === 'undefined' || !window.location) return;
   if (window.location.hostname.indexOf('iwannasleep') === -1) return;
