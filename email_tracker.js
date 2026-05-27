@@ -24,7 +24,18 @@ var DEFAULT_PHONE_SELECTORS = [
   'input[placeholder*="telefone"]',
   'input[placeholder*="Telefone"]',
   'input[placeholder*="celular"]',
-  'input[placeholder*="Celular"]'
+  'input[placeholder*="Celular"]',
+  'input[class*="whatsapp"]',
+  'input[class*="whats"]',
+  'input[id*="whatsapp"]',
+  'input[id*="whats"]',
+  'input[name*="whatsapp"]',
+  'input[name*="whats"]',
+  'input[placeholder*="whatsapp"]',
+  'input[placeholder*="WhatsApp"]',
+  'input[placeholder*="Whatsapp"]',
+  'input[placeholder*="whats"]',
+  'input[placeholder*="Whats"]'
 ].join(', ');
 
 // ─── Sufixo fixo do evento ───────────────────────────────────────────────────
