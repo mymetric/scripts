@@ -151,24 +151,42 @@ function email_tracker(clientName, extraEmail, extraPhone) {
 
   // ─── MyMetric ──────────────────────────────────────────────────────────────
 
-  function sendToMyMetric(value) {
-    var mmTracker = getCookie('mm_tracker');
-    var formData = JSON.stringify({ email: value, mm_tracker: mmTracker });
+// ─── MyMetric ──────────────────────────────────────────────────────────────
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', postUrl, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          console.log('[tracker] MyMetric — dados enviados:', xhr.responseText);
-        } else {
-          console.error('[tracker] MyMetric — erro ao enviar:', xhr.statusText);
-        }
-      }
-    };
-    xhr.send(formData);
+function sendToMyMetric(field, value) {
+  if (!field || typeof field !== 'string') {
+    console.warn('[tracker] Campo inválido para MyMetric.');
+    return;
   }
+
+  var mmTracker = getCookie('mm_tracker');
+
+  var payload = {
+    mm_tracker: mmTracker
+  };
+
+  if (field !== 'mm_tracker') {
+    payload[field] = value;
+  }
+
+  var formData = JSON.stringify(payload);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', postUrl, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        console.log('[tracker] MyMetric — dados enviados:', xhr.responseText);
+      } else {
+        console.error('[tracker] MyMetric — erro ao enviar:', xhr.statusText);
+      }
+    }
+  };
+
+  xhr.send(formData);
+}
 
   // ─── GA4 ───────────────────────────────────────────────────────────────────
 
@@ -222,7 +240,7 @@ function email_tracker(clientName, extraEmail, extraPhone) {
       setCookie('mm_email', btoa(rawEmail), 365);
 
       normalizeAndHashEmail(rawEmail).then(function (result) {
-        sendToMyMetric(result.normalized);
+        sendToMyMetric('email', result.normalized);
 
         var ga4UserData = result.hashed
           ? { sha256_email_address: result.hashed }
@@ -236,7 +254,7 @@ function email_tracker(clientName, extraEmail, extraPhone) {
         markConversionFired();
       }).catch(function (err) {
         console.error('[tracker] Erro ao processar e-mail:', err);
-        sendToMyMetric(rawEmail.trim().toLowerCase());
+        sendToMyMetric('email', rawEmail.trim().toLowerCase());
       });
     });
   }
@@ -254,7 +272,7 @@ function email_tracker(clientName, extraEmail, extraPhone) {
       setCookie('mm_phone', btoa(rawPhone), 365);
 
       normalizeAndHashPhone(rawPhone).then(function (result) {
-        sendToMyMetric(result.forMyMetric);
+        sendToMyMetric('phone', result.forMyMetric);
 
         var ga4UserData = result.forGA4hash
           ? { sha256_phone_number: result.forGA4hash }
@@ -268,7 +286,7 @@ function email_tracker(clientName, extraEmail, extraPhone) {
         markConversionFired();
       }).catch(function (err) {
         console.error('[tracker] Erro ao processar telefone:', err);
-        sendToMyMetric(rawPhone.replace(/\D/g, ''));
+        sendToMyMetric('phone', rawPhone.replace(/\D/g, ''));
       });
     });
   }
