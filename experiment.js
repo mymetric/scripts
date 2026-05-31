@@ -85,7 +85,7 @@ function new_experiment(id, name, experimentCallback) {
 			experiment_variant: variant,
 			experiment_name: name
 		});
-		setTimeout(runVariant, 300);
+		setTimeout(runVariant, 500);
 	}
 }
 
