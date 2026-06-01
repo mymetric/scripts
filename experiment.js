@@ -5,88 +5,99 @@ function set_cookie(name, value, expirationDays) {
 	date.setTime(date.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
 	const expires = "expires=" + date.toUTCString();
 	document.cookie = name + "=" + value + ";" + expires + ";path=/";
-}
-
-function get_cookie(name) {
+  }
+  
+  function get_cookie(name) {
 	const cookies = document.cookie.split("; ");
 	for (let i = 0; i < cookies.length; i++) {
-		const cookie = cookies[i].split("=");
-		if (cookie[0] === name) {
-			return cookie[1];
-		}
+	  const cookie = cookies[i].split("=");
+	  if (cookie[0] === name) {
+		return cookie[1];
+	  }
 	}
 	return "";
-}
-
-function random_number() {
-	var randomNumber = Math.random() * 10;
-	return randomNumber;
-}
-
-// bucket
-
-function bucket_sort() {
-	var bucket = parseInt(get_cookie("mm_exp_bucket"));
-	if (!bucket) {
-		bucket = Math.round(random_number());
-		set_cookie("mm_exp_bucket", bucket, 365);
-	}
-	return bucket;
-}
-
-
-// experiment
+  }
+  
+  function random_number() {
+	  
+	  var randomNumber = Math.random() * 10;
+	  
+	  return randomNumber;
+  
+  }
+  
+  // bucket
+  
+  function bucket_sort() {
+  
+	  var bucket = parseInt(get_cookie("mm_exp_bucket"));
+  
+	  if (!bucket) {
+  
+		  bucket = Math.round(random_number());
+		  set_cookie("mm_exp_bucket", bucket, 365);
+  
+	  }
+  
+	  return bucket;
+  
+  }
+  
+  
+  // experiment
 function new_experiment(id, name, experimentCallback) {
-	if (name === undefined) name = null;
+    if (name === undefined) name = null;
 
-	var cookie_name = "mm_exp_id_" + id;
-	var exp = get_cookie(cookie_name);
-	var exp_id = '';
-	var variant = '';
+    var cookie_name = "mm_exp_id_" + id;
+    var exp = get_cookie(cookie_name);
+    var exp_id = '';
+    var variant = '';
 
-	if (exp) {
-		exp_id = exp.split(".")[0];
-		variant = exp.split(".")[1];
-	}
+    if (exp) {
+        exp_id = exp.split(".")[0];
+        variant = exp.split(".")[1];
+    }
 
-	if (exp_id !== id) {
-		if (random_number() <= 5) {
-			variant = 0;
-		} else {
-			variant = 1;
-		}
-		set_cookie(cookie_name, id + "." + variant, 365);
-	}
+    if (exp_id !== id) {
+        if (random_number() <= 5) {
+            variant = 0;
+        } else {
+            variant = 1;
+        }
+        set_cookie(cookie_name, id + "." + variant, 365);
+    }
 
-	function runVariant() {
-		document.documentElement.classList.remove('exp-hide');
-		if (variant == '0') {
-			if (typeof experiment_original !== 'undefined') {
-				experiment_original();
-			}
-		}
-		if (variant == '1') {
-			experimentCallback(id);
-		}
-	}
+    // Função que executa a variante — só chamada após confirmação do GA
+    function runVariant() {
+        if (variant == '0') {
+            if (typeof experiment_original !== 'undefined') {
+                experiment_original();
+            }
+        }
+        if (variant == '1') {
+            experimentCallback(id);
+        }
+    }
 
-	if (typeof gtag == 'function') {
-		gtag("event", "experiment_impression", {
-			experiment_id: id,
-			experiment_variant: variant,
-			experiment_name: name,
-			event_callback: runVariant,
-			event_timeout: 500
-		});
-	} else {
-		dataLayer.push({
-			event: "experiment_impression",
-			experiment_id: id,
-			experiment_variant: variant,
-			experiment_name: name
-		});
-		setTimeout(runVariant, 500);
-	}
+    if (typeof gtag == 'function') {
+        gtag("event", "experiment_impression", {
+            experiment_id: id,
+            experiment_variant: variant,
+            experiment_name: name,
+            event_callback: runVariant,          // GA chama isso após confirmar envio
+            event_timeout: 500                   // fallback: executa após 500ms de qualquer forma
+        });
+    } else {
+        dataLayer.push({
+            event: "experiment_impression",
+            experiment_id: id,
+            experiment_variant: variant,
+            experiment_name: name,
+            eventCallback: runVariant,           // equivalente no GTM
+            eventTimeout: 500
+        });
+        runVariant(); // dataLayer não garante callback; chama direto como fallback
+    }
 }
 
 // Iwannasleep: load AB tests unconditionally (bypass legacy callback gating).
@@ -94,11 +105,11 @@ function new_experiment(id, name, experimentCallback) {
 // iws-ab-tests.js itself prevents duplicate impressions if multiple
 // injection paths fire.
 (function () {
-	if (typeof window === 'undefined' || !window.location) return;
-	if (window.location.hostname.indexOf('iwannasleep') === -1) return;
-	if (document.querySelector('script[src*="iws-ab-tests.js"]')) return;
-	var s = document.createElement('script');
-	s.src = 'https://cdn.jsdelivr.net/gh/mymetric/iws@main/iws-ab-tests.js';
-	s.async = true;
-	(document.head || document.documentElement).appendChild(s);
+  if (typeof window === 'undefined' || !window.location) return;
+  if (window.location.hostname.indexOf('iwannasleep') === -1) return;
+  if (document.querySelector('script[src*="iws-ab-tests.js"]')) return;
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/gh/mymetric/iws@main/iws-ab-tests.js';
+  s.async = true;
+  (document.head || document.documentElement).appendChild(s);
 })();
