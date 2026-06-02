@@ -18,6 +18,8 @@ var DEFAULT_PHONE_SELECTORS = [
   'input[id*="tel"]',
   'input[class*="fone"]',
   'input[id*="fone"]',
+  'input[class*="fone"]',
+  'input[id*="fone"]',
   'input[name*="phone"]',
   'input[name*="tel"]',
   'input[name*="fone"]',
@@ -235,6 +237,13 @@ function sendToMyMetric(field, value) {
 
     input.addEventListener('change', function (e) {
       var rawEmail = e.target.value;
+
+      // Rejeita se o valor não contiver '@' — não é um e-mail válido
+      if (rawEmail.indexOf('@') === -1) {
+        console.warn('[tracker] E-mail ignorado — valor não parece ser um e-mail:', rawEmail);
+        return;
+      }
+
       console.log('[tracker] E-mail capturado:', rawEmail);
 
       setCookie('mm_email', btoa(rawEmail), 365);
@@ -267,6 +276,13 @@ function sendToMyMetric(field, value) {
 
     input.addEventListener('change', function (e) {
       var rawPhone = e.target.value;
+
+      // Rejeita se o valor tiver menos de 10 dígitos — não é um telefone válido
+      if (rawPhone.replace(/\D/g, '').length < 10) {
+        console.warn('[tracker] Telefone ignorado — valor não parece ser um telefone:', rawPhone);
+        return;
+      }
+
       console.log('[tracker] Telefone capturado:', rawPhone);
 
       setCookie('mm_phone', btoa(rawPhone), 365);
