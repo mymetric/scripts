@@ -184,51 +184,6 @@ function trackMetaEvent(eventName, eventData = {}) {
     window.fbq('track', eventName, eventData);
   }
 }
-// 📊 Função para enviar logs ao Better Stack (Telemetry)
-function sendToBetterStack(message, customerSlug, pageLocation = null, pageTitle = null, debugMode = false) {
-  const timestamp = new Date().toISOString();
- 
-  // Incluir customer slug e contexto da página no início da mensagem
-  let messageWithContext = `[${customerSlug}] ${message}`;
-  if (pageLocation) {
-    messageWithContext += ` | Page: ${pageLocation}`;
-  }
-  if (pageTitle) {
-    messageWithContext += ` | Title: ${pageTitle}`;
-  }
- 
-  const logData = {
-    dt: timestamp,
-    message: messageWithContext,
-    customer: customerSlug,
-    source: "mymetric-onetag-shopify",
-    page_location: pageLocation || null,
-    page_title: pageTitle || null
-  };
-  if (debugMode) {
-    console.log(
-      `%c📊 Enviando log para Better Stack (Telemetry)`,
-      'color: #8b5cf6; font-size: 11px; font-weight: 500;'
-    );
-    console.log(`%c Customer: ${customerSlug}`, 'color: #6366f1; font-size: 10px;');
-    console.log(`%c Message: ${messageWithContext}`, 'color: #6366f1; font-size: 10px;');
-    if (pageLocation) console.log(`%c Page Location: ${pageLocation}`, 'color: #3b82f6; font-size: 10px;');
-    if (pageTitle) console.log(`%c Page Title: ${pageTitle}`, 'color: #3b82f6; font-size: 10px;');
-  }
-  // Enviar para Better Stack
-  fetch('https://s1508317.eu-nbg-2.betterstackdata.com', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer sed7nDCNnoGR9GYXrWebrZaP'
-    },
-    body: JSON.stringify(logData)
-  }).catch(error => {
-    if (debugMode) {
-      console.error('MyMetricHUB: Erro ao enviar log para Better Stack:', error);
-    }
-  });
-}
 // 🚀 Função principal do MyMetric OneTag Shopify
 function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = true, event = false) {
   // Log de inicialização
@@ -246,8 +201,6 @@ function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = tru
       'color: #8b5cf6; font-size: 12px; font-weight: 500;'
     );
   }
-  // Enviar log de inicialização para Better Stack
-  sendToBetterStack(`MyMetricHUB inicializado com ${trackingIds.length} tracking IDs`, customerSlug, debugMode);
   // Validar se trackingIds é um array
   if (!Array.isArray(trackingIds)) {
     console.error('MyMetricHUB: trackingIds deve ser um array');
@@ -415,7 +368,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
    
     trackMetaEvent("PageView");
    
-    sendToBetterStack(`Page viewed: ${event.context.document.title}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "product_viewed") {
     const product = event.data.productVariant?.product;
@@ -445,7 +397,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       currency: event.data.productVariant?.price?.currencyCode || 'USD'
     });
    
-    sendToBetterStack(`Product viewed: ${product?.title} - ${product?.vendor}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "product_added_to_cart") {
     const cartLine = event.data.cartLine;
@@ -486,7 +437,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       }]
     });
    
-    sendToBetterStack(`Added to cart: ${product?.title} (${cartLine?.quantity}x) - ${cartLine?.cost?.totalAmount?.amount}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "checkout_started") {
     logMyMetricEvent('checkout_start', {
@@ -505,7 +455,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       num_items: event.data.checkout?.lineItems?.length || 0
     });
    
-    sendToBetterStack(`Checkout started: ${event.data.checkout?.totalPrice?.amount} ${event.data.checkout?.currencyCode}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "payment_info_submitted") {
     logMyMetricEvent('payment_info', {
@@ -525,7 +474,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       currency: event.data.checkout?.currencyCode || 'USD'
     });
    
-    sendToBetterStack(`Payment info submitted: ${event.data.paymentMethod?.type} - ${event.data.checkout?.totalPrice?.amount} ${event.data.checkout?.currencyCode}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "checkout_shipping_info_submitted") {
     logMyMetricEvent('shipping_info', {
@@ -541,7 +489,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       shipping_tier: event.data.checkout?.shippingLine?.title
     }, pageLocation, pageTitle);
    
-    sendToBetterStack(`Shipping info submitted: ${event.data.checkout?.shippingAddress?.country} - ${event.data.checkout?.shippingLine?.title}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "alert_displayed") {
     const alert = event.data.alert;
@@ -559,7 +506,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       alert_message: alert?.message
     }, pageLocation, pageTitle);
    
-    sendToBetterStack(`Alert displayed: ${alert?.type} - ${alert?.message} (target: ${alert?.target})`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "cart_viewed") {
     const cart = event.data.cart;
@@ -593,7 +539,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       content_ids: cart?.lines?.map(line => line?.merchandise?.product?.id) || []
     });
    
-    sendToBetterStack(`Cart viewed: ${cart?.cost?.totalAmount?.amount} ${cart?.cost?.totalAmount?.currencyCode} (${cart?.lines?.length || 0} items)`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "checkout_address_info_submitted") {
     const checkout = event.data.checkout;
@@ -612,7 +557,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       shipping_tier: checkout?.shippingLine?.title
     }, pageLocation, pageTitle);
    
-    sendToBetterStack(`Address info submitted: ${address?.city}, ${address?.country}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "checkout_contact_info_submitted") {
     const checkout = event.data.checkout;
@@ -627,7 +571,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       value: checkout?.totalPrice?.amount
     }, pageLocation, pageTitle);
    
-    sendToBetterStack(`Contact info submitted: ${checkout?.email}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "collection_viewed") {
     const collection = event.data.collection;
@@ -655,7 +598,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       content_ids: collection?.productVariants?.slice(0, 7).map(v => v?.product?.id) || []
     });
    
-    sendToBetterStack(`Collection viewed: ${collection?.title}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "product_removed_from_cart") {
     const cartLine = event.data.cartLine;
@@ -693,7 +635,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       });
     }
    
-    sendToBetterStack(`Product removed from cart: ${product?.title} - ${cartLine?.cost?.totalAmount?.amount} ${cartLine?.cost?.totalAmount?.currencyCode}`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "search_submitted") {
     const searchResult = event.data.searchResult;
@@ -720,7 +661,6 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       content_ids: searchResult?.productVariants?.slice(0, 10).map(v => v?.product?.id) || []
     });
    
-    sendToBetterStack(`Search submitted: "${searchResult?.query}"`, customerSlug, pageLocation, pageTitle, debugMode);
   }
   if(event.name === "ui_extension_errored") {
     const alert = event.data.alert;
@@ -737,6 +677,5 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       fatal: false
     }, pageLocation, pageTitle);
    
-    sendToBetterStack(`UI Extension Error: ${alert?.appName} v${alert?.appVersion} (${alert?.appId})`, customerSlug, pageLocation, pageTitle, debugMode);
   }
 }
