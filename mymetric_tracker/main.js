@@ -192,7 +192,7 @@ function getCookie(name) {
         
     }
     
-    fetch("https://hkdk.events/kpprra7w39ztyk/?event_name="+event_name, {
+    fetch("https://events.mymetric.app/posts?event_name="+event_name, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
