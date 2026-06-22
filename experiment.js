@@ -31,9 +31,9 @@ function set_cookie(name, value, expirationDays) {
   function bucket_sort() {
   
 	  var bucket = parseInt(get_cookie("mm_exp_bucket"));
-  
-	  if (!bucket) {
-  
+
+	  if (isNaN(bucket)) {
+
 		  bucket = Math.round(random_number());
 		  set_cookie("mm_exp_bucket", bucket, 365);
   
