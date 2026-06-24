@@ -300,8 +300,14 @@
 
   function bindSubmit(cfg, box, wppUrl) {
     var ctx = box._mm;
+    // Atualiza sempre o destino atual; só liga o listener uma vez (evita
+    // submits duplicados quando o form é reaberto).
+    ctx.wppUrl = wppUrl;
+    if (ctx._submitBound) return;
+    ctx._submitBound = true;
     ctx.submit.addEventListener('click', function (e) {
       e.preventDefault();
+      var wppUrl = ctx.wppUrl;
 
       var values = {};   // key -> valor cru do input
       var ok = true;
@@ -402,6 +408,21 @@
     }
   }
 
+  // Resolve o <a> mais próximo a partir do alvo do clique, mesmo quando o alvo
+  // é um filho (svg, path, span, text node) que não tenha .closest().
+  function findAnchor(target) {
+    var node = target;
+    while (node) {
+      if (node.tagName && String(node.tagName).toLowerCase() === 'a') return node;
+      if (node.closest) {
+        var a = node.closest('a');
+        if (a) return a;
+      }
+      node = node.parentNode || node.parentElement;
+    }
+    return null;
+  }
+
   function resolveTheme(cfg) {
     var t = cfg.theme || {};
     return {
@@ -418,9 +439,14 @@
   // ---------------------------------------------------------------------------
 
   var MMWhatsAppWidget = {
-    version: '1.0.0',
+    version: '1.0.1',
     init: function (config) {
       if (!config) return;
+
+      // Guard de inicialização única: se a tag GTM disparar mais de uma vez
+      // (SPA / múltiplos triggers), não duplica listeners de clique.
+      if (window.__mmWppWidgetInitialized) return;
+      window.__mmWppWidgetInitialized = true;
 
       // Defaults compartilhados.
       var cfg = config;
@@ -432,24 +458,31 @@
       cfg.linkMatcher = cfg.linkMatcher || /whatsapp|wa\.me/;
       cfg._theme = resolveTheme(cfg);
 
+      // O listener de clique é registrado IMEDIATAMENTE (não depende de
+      // DOMContentLoaded) para nunca perder o 1º clique. A captura (capture
+      // phase) garante interceptar antes de qualquer handler do site, e o
+      // preventDefault + stopPropagation impede a navegação nativa do <a>.
+      function onClick(e) {
+        var anchor = findAnchor(e.target);
+        if (!anchor) return;
+        var href = (anchor.getAttribute && anchor.getAttribute('href')) || '';
+        if (!cfg.linkMatcher.test(href)) return;
+        if (cfg.ignoreHref && href.indexOf(cfg.ignoreHref) !== -1) return;
+        // Impede a navegação nativa e que outros handlers naveguem.
+        e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        openForm(cfg, href);
+      }
+      // capture=true: intercepta antes de listeners de bubbling do site.
+      document.addEventListener('click', onClick, true);
+
       function run() {
         replaceLinks(cfg);
-
         if (window.MutationObserver) {
           var observer = new MutationObserver(function () { replaceLinks(cfg); });
           observer.observe(document.documentElement, { childList: true, subtree: true });
         }
-
-        document.addEventListener('click', function (e) {
-          var target = e.target.closest ? e.target.closest('a') : null;
-          if (!target) return;
-          var href = target.getAttribute('href') || '';
-          if (!cfg.linkMatcher.test(href)) return;
-          if (cfg.ignoreHref && href.indexOf(cfg.ignoreHref) !== -1) return;
-          e.preventDefault();
-          openForm(cfg, href);
-        });
-
         // Abertura automática via ?wpp=true
         var params = new URLSearchParams(window.location.search);
         if (params.get('wpp') === 'true') {
