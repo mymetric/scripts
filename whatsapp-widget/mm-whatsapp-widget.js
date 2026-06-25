@@ -335,17 +335,30 @@
 
       var dataFormWpp = { event_name: cfg.eventName, event_params: eventParams };
 
+      // Envio resistente à navegação: o submit redireciona pro wa.me logo abaixo
+      // (window.location), o que CANCELAVA o fetch antigo. sendBeacon sobrevive à
+      // navegação. IMPORTANTE: o Blob precisa ser text/plain (CORS-safelisted) —
+      // application/json exigiria preflight, que sendBeacon não faz, e o navegador
+      // descartaria o envio silenciosamente. Fallback: fetch com keepalive.
+      var eventsUrl = cfg.hubEndpoint + '?event_name=' + cfg.formSubmitEvent;
+      var eventsPayload = JSON.stringify(dataFormWpp);
+      var sent = false;
       try {
-        fetch(cfg.hubEndpoint + '?event_name=' + cfg.formSubmitEvent, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(dataFormWpp)
-        }).then(function (r) {
-          if (r.ok) return r.json();
-          throw new Error('Failed to send data');
-        }).then(function (d) { if (window.console) console.log(d); })
-          .catch(function (err) { if (window.console) console.error('Error:', err); });
-      } catch (err) { if (window.console) console.error('Error:', err); }
+        if (navigator && navigator.sendBeacon) {
+          var blob = new Blob([eventsPayload], { type: 'text/plain;charset=UTF-8' });
+          sent = navigator.sendBeacon(eventsUrl, blob);
+        }
+      } catch (e) { sent = false; }
+      if (!sent) {
+        try {
+          fetch(eventsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            body: eventsPayload,
+            keepalive: true
+          }).catch(function (err) { if (window.console) console.error('Error:', err); });
+        } catch (err) { if (window.console) console.error('Error:', err); }
+      }
 
       var dlPush = { event: cfg.dataLayerEvent };
       for (var k in eventParams) {
@@ -439,7 +452,7 @@
   // ---------------------------------------------------------------------------
 
   var MMWhatsAppWidget = {
-    version: '1.0.1',
+    version: '1.0.2',
     init: function (config) {
       if (!config) return;
 
@@ -450,7 +463,7 @@
 
       // Defaults compartilhados.
       var cfg = config;
-      cfg.hubEndpoint = cfg.hubEndpoint || 'https://mymetric-hub-shopify.ue.r.appspot.com/';
+      cfg.hubEndpoint = cfg.hubEndpoint || 'https://events.mymetric.app/posts';
       cfg.formSubmitEvent = cfg.formSubmitEvent || (cfg.slug + '_whatsapp_form_submit');
       cfg.eventName = cfg.eventName || (cfg.slug + '_whatsapp_widget');
       cfg.dataLayerEvent = cfg.dataLayerEvent || (cfg.slug + '_whatsapp_widget_submit');
