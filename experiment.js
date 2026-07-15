@@ -67,8 +67,12 @@ function new_experiment(id, name, experimentCallback) {
         set_cookie(cookie_name, id + "." + variant, 365);
     }
 
-    // Função que executa a variante — só chamada após confirmação do GA
+    // Função que executa a variante — só roda APÓS a impressão ser enviada.
+    // Idempotente: roda uma única vez, seja pelo callback do GA/GTM ou pelo timeout de fallback.
+    var _variantRan = false;
     function runVariant() {
+        if (_variantRan) return;
+        _variantRan = true;
         if (variant == '0') {
             if (typeof experiment_original !== 'undefined') {
                 experiment_original();
@@ -84,19 +88,26 @@ function new_experiment(id, name, experimentCallback) {
             experiment_id: id,
             experiment_variant: variant,
             experiment_name: name,
-            event_callback: runVariant,          // GA chama isso após confirmar envio
-            event_timeout: 500                   // fallback: executa após 500ms de qualquer forma
+            event_callback: runVariant,          // GA chama após confirmar o envio da impressão
+            event_timeout: 500                   // fallback do gtag: executa após 500ms
         });
+        // Garantia extra: se o callback do gtag não vier, roda mesmo assim (idempotente).
+        setTimeout(runVariant, 700);
     } else {
         dataLayer.push({
             event: "experiment_impression",
             experiment_id: id,
             experiment_variant: variant,
             experiment_name: name,
-            eventCallback: runVariant,           // equivalente no GTM
+            eventCallback: runVariant,           // GTM chama após disparar as tags do push
             eventTimeout: 500
         });
-        runVariant(); // dataLayer não garante callback; chama direto como fallback
+        // FIX (split torto): NÃO rodar runVariant() síncrono aqui. Antes, o redirect/variante
+        // rodava ANTES do GTM disparar a tag de experiment_impression, então a variante era
+        // subcontada. Agora espera o GTM enviar a impressão; se o callback não vier, roda após
+        // 700ms como fallback (idempotente garante execução única). Assim o evento dispara
+        // sempre — nem que seja logo antes do redirect.
+        setTimeout(runVariant, 700);
     }
 }
 
