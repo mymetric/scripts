@@ -173,6 +173,17 @@ function sendToMyMetric(field, value) {
 
   var formData = JSON.stringify(payload);
 
+  // sendBeacon garante o envio mesmo quando a página navega logo em seguida
+  // (ex: form que redireciona no submit) — um XHR assíncrono seria abortado.
+  if (navigator.sendBeacon) {
+    var blob = new Blob([formData], { type: 'application/json' });
+    if (navigator.sendBeacon(postUrl, blob)) {
+      console.log('[tracker] MyMetric — dados enviados via sendBeacon.');
+      return;
+    }
+    console.warn('[tracker] MyMetric — sendBeacon falhou, tentando XHR.');
+  }
+
   var xhr = new XMLHttpRequest();
   xhr.open('POST', postUrl, true);
   xhr.setRequestHeader('Content-Type', 'application/json');
@@ -231,81 +242,111 @@ function sendToMyMetric(field, value) {
 
   // ─── Captura de E-mail ─────────────────────────────────────────────────────
 
+  function captureEmail(rawEmail) {
+    // Rejeita se o valor não contiver '@' — não é um e-mail válido
+    if (!rawEmail || rawEmail.indexOf('@') === -1) {
+      console.warn('[tracker] E-mail ignorado — valor não parece ser um e-mail:', rawEmail);
+      return;
+    }
+
+    console.log('[tracker] E-mail capturado:', rawEmail);
+
+    setCookie('mm_email', btoa(rawEmail), 365);
+
+    normalizeAndHashEmail(rawEmail).then(function (result) {
+      sendToMyMetric('email', result.normalized);
+
+      var ga4UserData = result.hashed
+        ? { sha256_email_address: result.hashed }
+        : { email: result.normalized };
+      sendToGA4(ga4UserData);
+
+      if (result.hashed) {
+        sendToMetaPixel({ em: result.hashed });
+      }
+
+      markConversionFired();
+    }).catch(function (err) {
+      console.error('[tracker] Erro ao processar e-mail:', err);
+      sendToMyMetric('email', rawEmail.trim().toLowerCase());
+    });
+  }
+
   function logEmailOnChange(input) {
     if (input._emailListenerAttached) return;
     input._emailListenerAttached = true;
 
     input.addEventListener('change', function (e) {
-      var rawEmail = e.target.value;
-
-      // Rejeita se o valor não contiver '@' — não é um e-mail válido
-      if (rawEmail.indexOf('@') === -1) {
-        console.warn('[tracker] E-mail ignorado — valor não parece ser um e-mail:', rawEmail);
-        return;
-      }
-
-      console.log('[tracker] E-mail capturado:', rawEmail);
-
-      setCookie('mm_email', btoa(rawEmail), 365);
-
-      normalizeAndHashEmail(rawEmail).then(function (result) {
-        sendToMyMetric('email', result.normalized);
-
-        var ga4UserData = result.hashed
-          ? { sha256_email_address: result.hashed }
-          : { email: result.normalized };
-        sendToGA4(ga4UserData);
-
-        if (result.hashed) {
-          sendToMetaPixel({ em: result.hashed });
-        }
-
-        markConversionFired();
-      }).catch(function (err) {
-        console.error('[tracker] Erro ao processar e-mail:', err);
-        sendToMyMetric('email', rawEmail.trim().toLowerCase());
-      });
+      captureEmail(e.target.value);
     });
   }
 
   // ─── Captura de Telefone ───────────────────────────────────────────────────
+
+  function capturePhone(rawPhone) {
+    // Rejeita se o valor tiver menos de 10 dígitos — não é um telefone válido
+    if (!rawPhone || rawPhone.replace(/\D/g, '').length < 10) {
+      console.warn('[tracker] Telefone ignorado — valor não parece ser um telefone:', rawPhone);
+      return;
+    }
+
+    console.log('[tracker] Telefone capturado:', rawPhone);
+
+    setCookie('mm_phone', btoa(rawPhone), 365);
+
+    normalizeAndHashPhone(rawPhone).then(function (result) {
+      sendToMyMetric('phone', result.forMyMetric);
+
+      var ga4UserData = result.forGA4hash
+        ? { sha256_phone_number: result.forGA4hash }
+        : { phone_number: '+' + rawPhone.replace(/\D/g, '') };
+      sendToGA4(ga4UserData);
+
+      if (result.forMetaHash) {
+        sendToMetaPixel({ ph: result.forMetaHash });
+      }
+
+      markConversionFired();
+    }).catch(function (err) {
+      console.error('[tracker] Erro ao processar telefone:', err);
+      sendToMyMetric('phone', rawPhone.replace(/\D/g, ''));
+    });
+  }
 
   function logPhoneOnChange(input) {
     if (input._phoneListenerAttached) return;
     input._phoneListenerAttached = true;
 
     input.addEventListener('change', function (e) {
-      var rawPhone = e.target.value;
-
-      // Rejeita se o valor tiver menos de 10 dígitos — não é um telefone válido
-      if (rawPhone.replace(/\D/g, '').length < 10) {
-        console.warn('[tracker] Telefone ignorado — valor não parece ser um telefone:', rawPhone);
-        return;
-      }
-
-      console.log('[tracker] Telefone capturado:', rawPhone);
-
-      setCookie('mm_phone', btoa(rawPhone), 365);
-
-      normalizeAndHashPhone(rawPhone).then(function (result) {
-        sendToMyMetric('phone', result.forMyMetric);
-
-        var ga4UserData = result.forGA4hash
-          ? { sha256_phone_number: result.forGA4hash }
-          : { phone_number: '+' + rawPhone.replace(/\D/g, '') };
-        sendToGA4(ga4UserData);
-
-        if (result.forMetaHash) {
-          sendToMetaPixel({ ph: result.forMetaHash });
-        }
-
-        markConversionFired();
-      }).catch(function (err) {
-        console.error('[tracker] Erro ao processar telefone:', err);
-        sendToMyMetric('phone', rawPhone.replace(/\D/g, ''));
-      });
+      capturePhone(e.target.value);
     });
   }
+
+  // ─── Captura no submit do form ──────────────────────────────────────────────
+  // Formulários que navegam/redirecionam no submit (ex: <form method="get">)
+  // podem não disparar 'change' a tempo (campo nunca perde foco antes do envio).
+  // Escutar 'submit' em fase de captura garante ler o valor antes da navegação.
+
+  function captureFormOnSubmit(e) {
+    var form = e.target;
+    if (!form || typeof form.querySelectorAll !== 'function') return;
+
+    try {
+      var emailFields = form.querySelectorAll(emailSelector);
+      for (var i = 0; i < emailFields.length; i++) {
+        if (emailFields[i].value) captureEmail(emailFields[i].value);
+      }
+
+      var phoneFields = form.querySelectorAll(phoneSelector);
+      for (var j = 0; j < phoneFields.length; j++) {
+        if (phoneFields[j].value) capturePhone(phoneFields[j].value);
+      }
+    } catch (err) {
+      // Seletor inválido em algum contexto específico — ignora
+    }
+  }
+
+  document.addEventListener('submit', captureFormOnSubmit, true);
 
   // ─── Scan & Observer ───────────────────────────────────────────────────────
 
