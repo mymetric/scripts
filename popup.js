@@ -39,13 +39,27 @@ function isMetaBrowser() {
   return isInstagram || isFacebook;
 }
 
+function slugify(str) {
+  if (!str) return '';
+  var text = String(str).replace(/<[^>]*>/g, '');
+  try {
+    text = text.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  } catch (e) {}
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
 function createPopup(
-  imgUrl, titleText, subtitleText, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField, 
+  imgUrl, titleText, subtitleText, postUrl, buttonText, closeText, afterMessage, gtmPreviewCode, closeDays, buttonColor, buttonBgColor, disablePhoneField,
   preQuiz = false,
-  preQuizTitle = '', 
-  preQuizSubtitle = '', 
-  preQuizExplanation = '', 
-  preQuizButtons = []
+  preQuizTitle = '',
+  preQuizSubtitle = '',
+  preQuizExplanation = '',
+  preQuizButtons = [],
+  identifier = ''
 ) {
 
   // Verifica se a URL contém "crm", "email" ou "mautic"
@@ -60,6 +74,9 @@ function createPopup(
   if (getCookie('mm_email') || getCookie('mm_phone') || getCookie('popup_closed')) {
     return;
   }
+
+  // Identificador do popup: usa o parâmetro explícito, senão cai pro slug do título (mantém compatibilidade com embeds existentes que não passam identifier)
+  var popupIdentifier = identifier || slugify(titleText) || 'popup';
 
   var overlay = document.createElement('div');
   overlay.setAttribute('id', 'image-popup-overlay');
@@ -120,6 +137,8 @@ function createPopup(
 
   var formContainer = document.createElement('div');
   formContainer.setAttribute('class', 'form-container');
+  formContainer.setAttribute('id', 'mm-popup-form-' + popupIdentifier);
+  formContainer.setAttribute('data-mm-identifier', popupIdentifier);
   formContainer.style.display = 'flex';
   formContainer.style.flexDirection = 'column';
   formContainer.style.alignItems = 'center';
@@ -149,6 +168,7 @@ function createPopup(
   var nameInput = document.createElement('input');
   nameInput.setAttribute('placeholder', 'Seu Nome');
   nameInput.setAttribute('name', 'name');
+  nameInput.setAttribute('id', popupIdentifier + '-name');
   nameInput.setAttribute('type', 'text');
   nameInput.style.marginBottom = '10px';
   nameInput.style.padding = '15px';
@@ -160,6 +180,7 @@ function createPopup(
   var emailInput = document.createElement('input');
   emailInput.setAttribute('placeholder', 'Seu E-mail');
   emailInput.setAttribute('name', 'email');
+  emailInput.setAttribute('id', popupIdentifier + '-email');
   emailInput.setAttribute('type', 'email');
   emailInput.style.marginBottom = '10px';
   emailInput.style.padding = '15px';
@@ -173,6 +194,7 @@ function createPopup(
     phoneInput = document.createElement('input');
     phoneInput.setAttribute('placeholder', 'Seu Telefone');
     phoneInput.setAttribute('name', 'phone');
+    phoneInput.setAttribute('id', popupIdentifier + '-phone');
     phoneInput.setAttribute('type', 'tel');
     phoneInput.style.marginBottom = '10px';
     phoneInput.style.padding = '15px';
@@ -315,6 +337,7 @@ function createPopup(
       var mmTracker = getCookie('mm_tracker');
       var formData = JSON.stringify({
         source: "popup",
+        identifier: popupIdentifier,
         name: name,
         email: email,
         phone: phone.replace(/\D/g, ""),
