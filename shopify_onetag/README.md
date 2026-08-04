@@ -36,15 +36,48 @@ var ids = [
 var slug = "linus";
 var debugMode = true;
 
+// (Opcional) Endpoint HTTP que vai receber, via POST, o payload bruto de TODOS os
+// eventos do Shopify capturados por analytics.subscribe('all_events'). Deixe null/undefined
+// para desativar (comportamento padrão, sem envio extra nenhum).
+var webhookUrl = null; // ex: "https://meu-endpoint.com/shopify-events"
+
 mmtr.onload = function() {
     
-    mymetric_onetag_shopify_init(ids, slug, debugMode);
+    mymetric_onetag_shopify_init(ids, slug, debugMode, false, webhookUrl);
 
     analytics.subscribe('all_events', (event) => {
         mymetric_onetag_shopify_events(event, slug, debugMode);
     });
 };
 ```
+
+## Enviar todos os eventos para um endpoint (webhook)
+
+Além do disparo padrão para GA4/Meta/etc, é possível ativar o envio de **todos** os
+eventos brutos do Shopify (qualquer `event.name`, incluindo os que hoje não têm
+dispatch específico) para um endpoint HTTP próprio via `POST`.
+
+Basta passar a URL como 5º parâmetro de `mymetric_onetag_shopify_init`:
+
+```js
+mymetric_onetag_shopify_init(ids, slug, debugMode, false, "https://meu-endpoint.com/shopify-events");
+```
+
+O payload enviado (JSON, `Content-Type: application/json`) tem o formato:
+
+```json
+{
+  "customer": "linus",
+  "event_name": "product_added_to_cart",
+  "event_id": "...",
+  "timestamp": "...",
+  "context": { "...": "..." },
+  "data": { "...": "..." }
+}
+```
+
+Se `webhookUrl` não for informado (ou for `null`), nada é enviado — comportamento
+100% retrocompatível com integrações existentes.
 
 ## Eventos Rastreados
 

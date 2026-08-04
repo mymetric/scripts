@@ -184,8 +184,46 @@ function trackMetaEvent(eventName, eventData = {}) {
     window.fbq('track', eventName, eventData);
   }
 }
+// 📡 URL do endpoint de webhook (configurado via mymetric_onetag_shopify_init)
+let mmWebhookUrl = null;
+// 📡 Envia o payload bruto de TODOS os eventos do Shopify para um endpoint HTTP configurável.
+// Ativado passando `webhookUrl` em mymetric_onetag_shopify_init. Não interfere no fluxo de
+// GA4/Meta/etc, é apenas um "espelho" cru dos eventos capturados via analytics.subscribe('all_events').
+function sendEventToWebhook(event, customerSlug, debugMode = false) {
+  if (!mmWebhookUrl) return;
+
+  const payload = {
+    customer: customerSlug,
+    event_name: event?.name,
+    event_id: event?.id,
+    timestamp: event?.timestamp || new Date().toISOString(),
+    context: event?.context,
+    data: event?.data
+  };
+
+  fetch(mmWebhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(res => {
+      if (debugMode) {
+        console.log(`%c📡 MyMetricHUB - Evento enviado ao webhook: ${event?.name} (${res.status})`, 'color: #10b981; font-size: 10px;');
+      }
+    })
+    .catch(err => {
+      if (debugMode) {
+        console.error('MyMetricHUB: erro ao enviar evento para webhook', err);
+      }
+    });
+}
 // 🚀 Função principal do MyMetric OneTag Shopify
-function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = true, event = false) {
+function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = true, event = false, webhookUrl = null) {
+  // Configurar envio de todos os eventos para um endpoint HTTP, se informado
+  mmWebhookUrl = webhookUrl || null;
+  if (debugMode && mmWebhookUrl) {
+    console.log(`%c📡 Webhook de eventos habilitado: ${mmWebhookUrl}`, 'color: #10b981; font-size: 12px; font-weight: 500;');
+  }
   // Log de inicialização
   if (debugMode) {
     console.log(
@@ -355,6 +393,10 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
   if (debugMode) {
     console.log(`%c 🛍️ Configurando 13 eventos do Shopify`, 'color: #f59e0b; font-size: 10px;');
   }
+
+  // 📡 Envia o evento cru (todos os tipos, sem filtro) para o webhook configurado, se houver
+  sendEventToWebhook(event, customerSlug, debugMode);
+
   if(event.name === "page_viewed") {
     logMyMetricEvent('page_view', {
       location: event.context.document.location.href,
