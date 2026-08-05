@@ -186,6 +186,54 @@ function trackMetaEvent(eventName, eventData = {}) {
 }
 // 📡 URL do endpoint de webhook (configurado via mymetric_onetag_shopify_init)
 let mmWebhookUrl = null;
+// 🍪 Cache dos cookies de identificação lidos do top frame (mm_tracker, _fbp, _fbc).
+// A leitura é assíncrona, então mantemos o último valor conhecido em memória e
+// revalidamos em background — o envio do evento nunca espera pelo cookie.
+let mmCookieCache = { mm_tracker: null, fbp: null, fbc: null };
+// 🍪 Lê um cookie do TOP FRAME (a página da loja), não do iframe do pixel.
+// Dentro de um custom pixel do Shopify o `document.cookie` nativo é o do sandbox e
+// não enxerga os cookies da loja; a Web Pixels API expõe `browser.cookie.get` (async)
+// justamente pra isso. Fora do sandbox (instalação via tema/GTM, ex: Yampi) o
+// `browser` não existe e o fallback pro document.cookie nativo mantém o comportamento.
+function readTopFrameCookie(name) {
+  try {
+    if (typeof browser !== 'undefined' && browser && browser.cookie && typeof browser.cookie.get === 'function') {
+      return Promise.resolve(browser.cookie.get(name)).catch(() => null);
+    }
+    const parts = ('; ' + document.cookie).split('; ' + name + '=');
+    return Promise.resolve(parts.length === 2 ? parts.pop().split(';').shift() : null);
+  } catch (e) {
+    return Promise.resolve(null);
+  }
+}
+// 🍪 Revalida o cache de cookies. Chamada na init e após cada envio (para o próximo evento).
+function refreshMmCookies() {
+  return Promise.all([
+    readTopFrameCookie('mm_tracker'),
+    readTopFrameCookie('_fbp'),
+    readTopFrameCookie('_fbc')
+  ])
+    .then(([mm, fbp, fbc]) => {
+      mmCookieCache = { mm_tracker: mm || null, fbp: fbp || null, fbc: fbc || null };
+      return mmCookieCache;
+    })
+    .catch(() => mmCookieCache);
+}
+// 🍪 O mm_tracker é gravado como JSON string (client_id, session_id, fbp, fbc, gclid,
+// ttclid, ua). Mandamos parseado pra facilitar a consulta no destino; se não for JSON
+// válido, vai o valor cru em vez de descartar o dado.
+function parseMmTracker(raw) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(decodeURIComponent(raw));
+  } catch (e) {
+    try {
+      return JSON.parse(raw);
+    } catch (e2) {
+      return raw;
+    }
+  }
+}
 // 📡 Envia o payload bruto de TODOS os eventos do Shopify para um endpoint HTTP configurável.
 // Ativado passando `webhookUrl` em mymetric_onetag_shopify_init. Não interfere no fluxo de
 // GA4/Meta/etc, é apenas um "espelho" cru dos eventos capturados via analytics.subscribe('all_events').
@@ -200,6 +248,10 @@ function sendEventToWebhook(event, customerSlug, debugMode = false) {
     shopify_event_name: event?.name,
     event_id: event?.id,
     timestamp: event?.timestamp || new Date().toISOString(),
+    // 🍪 Identificadores do top frame, pro consumidor conseguir montar a CAPI/Ads
+    mm_tracker: parseMmTracker(mmCookieCache.mm_tracker),
+    fbp: mmCookieCache.fbp,
+    fbc: mmCookieCache.fbc,
     context: event?.context,
     data: event?.data
   };
@@ -219,6 +271,9 @@ function sendEventToWebhook(event, customerSlug, debugMode = false) {
         console.error('MyMetricHUB: erro ao enviar evento para webhook', err);
       }
     });
+
+  // Revalida os cookies pro próximo evento (não bloqueia o envio deste)
+  refreshMmCookies();
 }
 // 🚀 Função principal do MyMetric OneTag Shopify
 function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = true, event = false, webhookUrl = null) {
@@ -226,6 +281,14 @@ function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = tru
   mmWebhookUrl = webhookUrl || null;
   if (debugMode && mmWebhookUrl) {
     console.log(`%c📡 Webhook de eventos habilitado: ${mmWebhookUrl}`, 'color: #10b981; font-size: 12px; font-weight: 500;');
+  }
+  // Pré-carrega mm_tracker/_fbp/_fbc pra que o primeiro evento já saia com os identificadores
+  if (mmWebhookUrl) {
+    refreshMmCookies().then(c => {
+      if (debugMode) {
+        console.log(`%c🍪 Cookies do top frame: mm_tracker=${c.mm_tracker ? 'ok' : 'ausente'} _fbp=${c.fbp ? 'ok' : 'ausente'} _fbc=${c.fbc ? 'ok' : 'ausente'}`, 'color: #10b981; font-size: 11px;');
+      }
+    });
   }
   // Log de inicialização
   if (debugMode) {
@@ -397,8 +460,17 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
     console.log(`%c 🛍️ Configurando 13 eventos do Shopify`, 'color: #f59e0b; font-size: 10px;');
   }
 
-  // 📡 Envia o evento cru (todos os tipos, sem filtro) para o webhook configurado, se houver
-  sendEventToWebhook(event, customerSlug, debugMode);
+  // 📡 Envia o evento cru (todos os tipos, sem filtro) para o webhook configurado, se houver.
+  // Isolado em try/catch: essa chamada roda ANTES dos dispatches de GA4/Meta abaixo, então
+  // um erro síncrono aqui (ex: URL de webhook malformada faz fetch lançar TypeError na hora)
+  // derrubaria todo o tracking do evento em silêncio.
+  try {
+    sendEventToWebhook(event, customerSlug, debugMode);
+  } catch (err) {
+    if (debugMode) {
+      console.error('MyMetricHUB: webhook falhou (ignorado, tracking segue)', err);
+    }
+  }
 
   if(event.name === "page_viewed") {
     logMyMetricEvent('page_view', {

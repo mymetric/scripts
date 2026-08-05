@@ -71,10 +71,29 @@ O payload enviado (JSON, `Content-Type: application/json`) tem o formato:
   "shopify_event_name": "product_added_to_cart",
   "event_id": "...",
   "timestamp": "...",
+  "mm_tracker": { "client_id": "...", "session_id": "...", "fbp": "...", "fbc": "...", "gclid": "...", "ttclid": "...", "ua": "..." },
+  "fbp": "fb.1....",
+  "fbc": "fb.1....",
   "context": { "...": "..." },
   "data": { "...": "..." }
 }
 ```
+
+### Identificadores (`mm_tracker`, `fbp`, `fbc`)
+
+São lidos do **top frame** (a página da loja), não do iframe do pixel. Num custom
+pixel do Shopify o `document.cookie` nativo é o do sandbox e não enxerga os cookies
+da loja — por isso a leitura usa
+[`browser.cookie.get`](https://shopify.dev/docs/api/web-pixels-api/standard-api/browser)
+da Web Pixels API, com fallback pro `document.cookie` quando o script roda fora do
+sandbox (instalação via tema/GTM, ex: Yampi).
+
+A leitura é assíncrona e fica em cache: é feita na init e revalidada após cada envio.
+O envio do evento nunca espera pelo cookie, então os campos podem vir `null` no
+primeiro evento de uma sessão nova.
+
+O `mm_tracker` é gravado pelo script [`mymetric_tracker`](../mymetric_tracker/) e vai
+parseado no payload (se não for JSON válido, vai o valor cru).
 
 > ⚠️ O nome do evento vai em `shopify_event_name`, **não** em `event_name`. O coletor
 > da MyMetric (`events.mymetric.app/posts`) remove a chave `event_name` do topo do body
