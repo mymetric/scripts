@@ -192,9 +192,12 @@ let mmWebhookUrl = null;
 function sendEventToWebhook(event, customerSlug, debugMode = false) {
   if (!mmWebhookUrl) return;
 
+  // ⚠️ Não usar a chave `event_name` no topo do payload: o coletor
+  // (events.mymetric.app/posts) remove essa chave do body antes de gravar,
+  // porque usa esse nome pra própria coluna da tabela. Por isso `shopify_event_name`.
   const payload = {
     customer: customerSlug,
-    event_name: event?.name,
+    shopify_event_name: event?.name,
     event_id: event?.id,
     timestamp: event?.timestamp || new Date().toISOString(),
     context: event?.context,

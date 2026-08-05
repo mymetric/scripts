@@ -68,13 +68,17 @@ O payload enviado (JSON, `Content-Type: application/json`) tem o formato:
 ```json
 {
   "customer": "linus",
-  "event_name": "product_added_to_cart",
+  "shopify_event_name": "product_added_to_cart",
   "event_id": "...",
   "timestamp": "...",
   "context": { "...": "..." },
   "data": { "...": "..." }
 }
 ```
+
+> ⚠️ O nome do evento vai em `shopify_event_name`, **não** em `event_name`. O coletor
+> da MyMetric (`events.mymetric.app/posts`) remove a chave `event_name` do topo do body
+> antes de gravar, porque usa esse nome pra própria coluna da tabela.
 
 Se `webhookUrl` não for informado (ou for `null`), nada é enviado — comportamento
 100% retrocompatível com integrações existentes.
