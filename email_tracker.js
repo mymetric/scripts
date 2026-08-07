@@ -151,11 +151,29 @@ function email_tracker(clientName, extraEmail, extraPhone) {
     });
   }
 
+  // ─── Identificador do form/input ───────────────────────────────────────────
+
+  function getFieldIdentifier(input) {
+    var form = input.closest ? input.closest('form') : null;
+    if (form && form.id) return form.id;
+    if (input.id) return input.id;
+    if (input.name) return input.name;
+    return null;
+  }
+
+  // ─── URL da página onde o lead foi capturado ───────────────────────────────
+
+  function getPageUrl() {
+    try {
+      return window.location.href;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // ─── MyMetric ──────────────────────────────────────────────────────────────
 
-// ─── MyMetric ──────────────────────────────────────────────────────────────
-
-function sendToMyMetric(field, value) {
+function sendToMyMetric(field, value, identifier) {
   if (!field || typeof field !== 'string') {
     console.warn('[tracker] Campo inválido para MyMetric.');
     return;
@@ -169,6 +187,15 @@ function sendToMyMetric(field, value) {
 
   if (field !== 'mm_tracker') {
     payload[field] = value;
+  }
+
+  if (identifier) {
+    payload.identifier = identifier;
+  }
+
+  var pageUrl = getPageUrl();
+  if (pageUrl) {
+    payload.url = pageUrl;
   }
 
   var formData = JSON.stringify(payload);
@@ -248,8 +275,10 @@ function sendToMyMetric(field, value) {
 
       setCookie('mm_email', btoa(rawEmail), 365);
 
+      var identifier = getFieldIdentifier(e.target);
+
       normalizeAndHashEmail(rawEmail).then(function (result) {
-        sendToMyMetric('email', result.normalized);
+        sendToMyMetric('email', result.normalized, identifier);
 
         var ga4UserData = result.hashed
           ? { sha256_email_address: result.hashed }
@@ -263,7 +292,7 @@ function sendToMyMetric(field, value) {
         markConversionFired();
       }).catch(function (err) {
         console.error('[tracker] Erro ao processar e-mail:', err);
-        sendToMyMetric('email', rawEmail.trim().toLowerCase());
+        sendToMyMetric('email', rawEmail.trim().toLowerCase(), identifier);
       });
     });
   }
@@ -287,8 +316,10 @@ function sendToMyMetric(field, value) {
 
       setCookie('mm_phone', btoa(rawPhone), 365);
 
+      var identifier = getFieldIdentifier(e.target);
+
       normalizeAndHashPhone(rawPhone).then(function (result) {
-        sendToMyMetric('phone', result.forMyMetric);
+        sendToMyMetric('phone', result.forMyMetric, identifier);
 
         var ga4UserData = result.forGA4hash
           ? { sha256_phone_number: result.forGA4hash }
@@ -302,7 +333,7 @@ function sendToMyMetric(field, value) {
         markConversionFired();
       }).catch(function (err) {
         console.error('[tracker] Erro ao processar telefone:', err);
-        sendToMyMetric('phone', rawPhone.replace(/\D/g, ''));
+        sendToMyMetric('phone', rawPhone.replace(/\D/g, ''), identifier);
       });
     });
   }
