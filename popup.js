@@ -110,13 +110,6 @@ function createPopup(
     container.style.height = '97%';
   }
 
-  if (window.innerHeight < 610) {
-    image.remove();
-    if (!isMobileDevice()) {
-      formContainer.style.width = '100%';
-    }
-  }
-
   var image = document.createElement('img');
   image.setAttribute('src', imgUrl);
   image.style.objectFit = 'cover';
@@ -150,6 +143,13 @@ function createPopup(
   } else {
     formContainer.style.width = '100%';
     formContainer.style.padding = '2px 10px';
+  }
+
+  // Tela curta: não há espaço para a imagem, mostra só o formulário.
+  // (precisa vir DEPOIS de image/formContainer existirem — ver append no final)
+  var shortScreen = window.innerHeight < 610;
+  if (shortScreen && !isMobileDevice()) {
+    formContainer.style.width = '100%';
   }
 
   var title = document.createElement('h2');
@@ -285,7 +285,9 @@ function createPopup(
   formContainer.appendChild(submitButton);
   formContainer.appendChild(closeLink);
 
-  container.appendChild(image);
+  if (!shortScreen) {
+    container.appendChild(image);
+  }
   container.appendChild(formContainer);
 
   overlay.appendChild(container);
