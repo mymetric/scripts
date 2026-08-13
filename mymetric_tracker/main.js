@@ -54,7 +54,9 @@ function getCookie(name) {
   function mymetric_tracker(domain, measurementId) {
     console.log("[mm_tracker] Iniciando rastreamento");
   
-    const trackedParams = ["ttclid", "msclkid"];
+    // oppref = click id do ChatGPT Ads (OpenAI). Chega como parametro na
+    // landing e some na navegacao, entao vira cookie proprio como os outros.
+    const trackedParams = ["ttclid", "msclkid", "oppref"];
     trackedParams.forEach(param => {
       const value = getUrlParameter(param);
       if (value) {
@@ -130,6 +132,12 @@ function getCookie(name) {
         fbc: getCookie("_fbc"),
         gclid: getCookie("_gcl_aw"),
         ttclid: getCookie("_ttclid"),
+        // A URL vem antes do cookie porque um clique novo tem que sobrescrever
+        // o anterior. __oppref e __obref sao os cookies do proprio SDK da
+        // OpenAI: servem de rede quando a pessoa entrou pelo anuncio numa
+        // pagina anterior, e o __obref nao tem equivalente na URL.
+        oppref: getUrlParameter("oppref") || getCookie("_oppref") || getCookie("__oppref"),
+        obref: getCookie("__obref"),
         ua: btoa(navigator.userAgent)
       };
   

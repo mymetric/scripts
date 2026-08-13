@@ -52,6 +52,25 @@ document.head.appendChild(mmtr);
 - **domain**: Seu domínio (ex: "uselinus.com.br")
 - **measurementId**: ID de medição do GA4 (ex: "G-WQKK3VE3KF")
 
+## 🔗 Click IDs capturados
+
+O cookie `mm_tracker` carrega o que permite atribuir o pedido a um clique de
+anúncio:
+
+| Campo | De onde vem |
+|---|---|
+| `gclid` | cookie `_gcl_aw` (Google Ads) |
+| `fbp` / `fbc` | cookies `_fbp` / `_fbc` (Meta) |
+| `ttclid` | parâmetro `?ttclid` → cookie `_ttclid` (TikTok) |
+| `oppref` | parâmetro `?oppref` → cookie `_oppref`, com fallback no `__oppref` do SDK da OpenAI (ChatGPT Ads) |
+| `obref` | cookie `__obref` do SDK da OpenAI |
+
+O `oppref` é o click id do **ChatGPT Ads**. A Conversions API da OpenAI **não**
+o captura sozinha: sem ele o pedido sobe mas casa mal com o clique. O parâmetro
+da URL tem precedência sobre o cookie, para um clique novo sobrescrever o
+anterior. `msclkid` (Microsoft Ads) também é persistido em cookie, mas ainda não
+entra no payload.
+
 ---
 
-**Versão**: 1.0.0
+**Versão**: 1.1.0
