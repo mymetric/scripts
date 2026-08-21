@@ -27,6 +27,25 @@
         document.cookie = name + '=' + (value || '') + expires + '; domain=.' + domain + '; path=/';
     }
 
+    // Captura o click id da Awin (?awc=) da URL e persiste por 30 dias, a janela
+    // padrao de cookie da Awin. Sem isto o awin_click_id so existia quando o cliente
+    // tinha uma tag de GTM propria gravando o cookie `awc`, e o S2S da Awin
+    // (parametro cks) fica sem referencia de clique. Nao grava o AwinChannelCookie:
+    // quem decide o canal (aw/other/direct) e a MasterTag da Awin.
+    function captureAwc(domain) {
+        try {
+            var m = window.location.search.match(/[?&]awc=([^&#]*)/);
+            if (m && m[1]) {
+                var awc = decodeURIComponent(m[1].replace(/\+/g, ' '));
+                if (awc) {
+                    setCookie('awc', awc, 30, domain);
+                    return awc;
+                }
+            }
+        } catch (e) {}
+        return getCookie('awc');
+    }
+
     function isCheckoutPage() {
         return window.location.href.toLowerCase().indexOf('checkout') > -1;
     }
@@ -152,6 +171,10 @@
         var measurementId = config.measurementId;
         var encoded = config.encoded !== undefined ? config.encoded : false;
 
+        // Antes de montar o mm_tracker pra que o pageview de entrada (o que traz
+        // ?awc= na URL) ja escreva o click id dentro do cookie.
+        var awinClickId = captureAwc(domain);
+
         function createCookie(dataObj) {
             if (dataObj.client_id && dataObj.session_id) {
                 var cookies = {
@@ -161,7 +184,7 @@
                     fbc: getCookie('_fbc'),
                     gclid: dataObj.gclid || getCookie('_gcl_aw'),
                     awin_channel: getCookie('AwinChannelCookie'),
-                    awin_click_id: getCookie('awc'),
+                    awin_click_id: awinClickId || getCookie('awc'),
                     ua: btoa(navigator.userAgent)
                 };
 
