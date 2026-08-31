@@ -384,18 +384,21 @@ function initGA4(ga4Ids, debugMode = false, event = false) {
     window.gtag = gtag; // expõe globalmente
     gtag("js", new Date());
 
-    const url = window.location.href;
-    const regex = /wpm@[^/]+\/custom\/web-pixel-[^/]+@[^/]+\/sandbox\/modern\//;
-    const cleanedUrl = url.replace(regex, '');
- 
-  // Configurar todos os IDs do GA4
+  // Configurar todos os IDs do GA4.
+  // Nao setar page_location / page_path / page_title aqui: dentro do custom pixel da
+  // Shopify o `window.location` e a URL do iframe sandbox
+  // (/web-pixels@<hash>/custom/web-pixel-<id>@<v>/sandbox/modern/<caminho real>), e o
+  // config nao tem acesso ao contexto do evento pra saber a URL de verdade. Pior: os
+  // parametros do config sao sticky e o `page_path` nunca era sobrescrito por evento,
+  // entao o caminho do sandbox grudava em todos os eventos da sessao e era ele que os
+  // relatorios "Paginas e telas" do GA4 exibiam.
+  // Cada evento manda seu proprio page_location/page_title a partir de
+  // event.context.document (ver mymetric_onetag_shopify_events e trackGA4Event), e o
+  // GA4 deriva o caminho do page_location sozinho.
   ga4Ids.forEach(id => {
     
     gtag("config", id, {
-      send_page_view: false,
-      page_location: cleanedUrl,
-      page_path: new URL(cleanedUrl).pathname,
-      page_title: document.title || 'Iframe Content'
+      send_page_view: false
     });
     
     if (debugMode) {
