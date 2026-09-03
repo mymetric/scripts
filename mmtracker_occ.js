@@ -263,7 +263,7 @@
 
     function getOccCartId(callback, errorCallback) {
         try {
-            fetch('/ccstore/v1/cart', {
+            fetch('/ccstore/v1/orders/current', {
                 method: 'GET',
                 credentials: 'include',
                 headers: { 'Accept': 'application/json' }
