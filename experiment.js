@@ -44,9 +44,40 @@ function set_cookie(name, value, expirationDays) {
   }
   
   
+  // Experimentos ENCERRADOS: rollout decidido, todo mundo na variante.
+  //
+  // Fica aqui e não na tag do cliente porque quem decide o fim do teste é quem
+  // mantém o experimento — a tag no GTM continua chamando new_experiment() do
+  // mesmo jeito, sem republicar container.
+  //
+  // Encerrar aqui também resolve o resíduo do cookie: `mm_exp_id_<id>` dura 365
+  // dias e o sorteio só rodava quando não havia cookie, então quem tinha caído
+  // no controle continuaria no original por quase um ano. Com o id nesta lista o
+  // cookie é ignorado.
+  //
+  // Valor = variante que todos passam a ver (0 = original, 1 = variante).
+  var EXPERIMENTOS_ENCERRADOS = {
+      // Coroas para Velório — "Checkout Externo Botao Comprar". 100% na variante
+      // (checkout novo em checkout.coroasparavelorio.com.br) desde 04/09/2026.
+      "RKdQkw183MTHhT3": 1
+  };
+
   // experiment
 function new_experiment(id, name, experimentCallback) {
     if (name === undefined) name = null;
+
+    // Teste encerrado: sem sorteio, sem cookie e sem evento de impressão — não
+    // há mais grupos para comparar. Roda a variante na hora, o que também
+    // elimina os 700ms de espera do fallback antes do redirect.
+    var encerrado = EXPERIMENTOS_ENCERRADOS[id];
+    if (encerrado !== undefined) {
+        if (String(encerrado) === '1') {
+            experimentCallback(id);
+        } else if (typeof experiment_original !== 'undefined') {
+            experiment_original();
+        }
+        return;
+    }
 
     var cookie_name = "mm_exp_id_" + id;
     var exp = get_cookie(cookie_name);
