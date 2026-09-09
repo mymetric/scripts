@@ -247,6 +247,23 @@ function parseMmTracker(raw) {
 function sendEventToWebhook(event, customerSlug, debugMode = false) {
   if (!mmWebhookUrl) return;
 
+  // 🍪 O cache é preenchido na init e revalidado só DEPOIS de cada envio, então
+  // o primeiro evento de uma visita sairia com o que existia antes do /id ter
+  // respondido — e o mm_fid iria null justamente nos eventos de abertura, que
+  // são a maioria. Quando ele falta, relê antes de montar o payload. O teto de
+  // 400ms existe pra que uma leitura travada nunca segure o evento: passado o
+  // prazo, manda com o que tiver, que é o comportamento antigo.
+  const pronto = mmCookieCache.mm_fid
+    ? Promise.resolve()
+    : Promise.race([
+        refreshMmCookies(),
+        new Promise(resolve => setTimeout(resolve, 400))
+      ]);
+
+  pronto.then(() => montarEEnviar(event, customerSlug, debugMode));
+}
+
+function montarEEnviar(event, customerSlug, debugMode) {
   // ⚠️ Não usar a chave `event_name` no topo do payload: o coletor
   // (events.mymetric.app/posts) remove essa chave do body antes de gravar,
   // porque usa esse nome pra própria coluna da tabela. Por isso `shopify_event_name`.
