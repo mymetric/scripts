@@ -186,10 +186,16 @@ function trackMetaEvent(eventName, eventData = {}) {
 }
 // 📡 URL do endpoint de webhook (configurado via mymetric_onetag_shopify_init)
 let mmWebhookUrl = null;
-// 🍪 Cache dos cookies de identificação lidos do top frame (mm_tracker, _fbp, _fbc).
+// 🍪 Cache dos cookies de identificação lidos do top frame (mm_tracker, mm_fid, _fbp, _fbc).
 // A leitura é assíncrona, então mantemos o último valor conhecido em memória e
 // revalidamos em background — o envio do evento nunca espera pelo cookie.
-let mmCookieCache = { mm_tracker: null, fbp: null, fbc: null };
+// 🍪 mm_fid é o espelho legível do cookie mm_fpid, que o servidor grava no /id.
+// O mm_fpid em si é HttpOnly e não chega aqui de jeito nenhum: o pixel roda em
+// iframe de origem opaca, então não manda header Cookie e o browser.cookie.get
+// não lê HttpOnly. O espelho existe só pra atravessar essa parede. Ao contrário
+// do mm_tracker, ele não depende do gtag ter respondido o client_id, então
+// costuma estar presente já no primeiro evento da visita.
+let mmCookieCache = { mm_tracker: null, mm_fid: null, fbp: null, fbc: null };
 // 🍪 Lê um cookie do TOP FRAME (a página da loja), não do iframe do pixel.
 // Dentro de um custom pixel do Shopify o `document.cookie` nativo é o do sandbox e
 // não enxerga os cookies da loja; a Web Pixels API expõe `browser.cookie.get` (async)
@@ -210,11 +216,12 @@ function readTopFrameCookie(name) {
 function refreshMmCookies() {
   return Promise.all([
     readTopFrameCookie('mm_tracker'),
+    readTopFrameCookie('mm_fid'),
     readTopFrameCookie('_fbp'),
     readTopFrameCookie('_fbc')
   ])
-    .then(([mm, fbp, fbc]) => {
-      mmCookieCache = { mm_tracker: mm || null, fbp: fbp || null, fbc: fbc || null };
+    .then(([mm, fid, fbp, fbc]) => {
+      mmCookieCache = { mm_tracker: mm || null, mm_fid: fid || null, fbp: fbp || null, fbc: fbc || null };
       return mmCookieCache;
     })
     .catch(() => mmCookieCache);
@@ -250,6 +257,9 @@ function sendEventToWebhook(event, customerSlug, debugMode = false) {
     timestamp: event?.timestamp || new Date().toISOString(),
     // 🍪 Identificadores do top frame, pro consumidor conseguir montar a CAPI/Ads
     mm_tracker: parseMmTracker(mmCookieCache.mm_tracker),
+    // O coletor normaliza esse campo para mm_fpid ao publicar. Vai null nas
+    // lojas que ainda não têm o /id instalado — campo novo, não quebra nada.
+    mm_fid: mmCookieCache.mm_fid,
     fbp: mmCookieCache.fbp,
     fbc: mmCookieCache.fbc,
     context: event?.context,
@@ -286,7 +296,7 @@ function mymetric_onetag_shopify_init(trackingIds, customerSlug, debugMode = tru
   if (mmWebhookUrl) {
     refreshMmCookies().then(c => {
       if (debugMode) {
-        console.log(`%c🍪 Cookies do top frame: mm_tracker=${c.mm_tracker ? 'ok' : 'ausente'} _fbp=${c.fbp ? 'ok' : 'ausente'} _fbc=${c.fbc ? 'ok' : 'ausente'}`, 'color: #10b981; font-size: 11px;');
+        console.log(`%c🍪 Cookies do top frame: mm_tracker=${c.mm_tracker ? 'ok' : 'ausente'} mm_fid=${c.mm_fid ? 'ok' : 'ausente'} _fbp=${c.fbp ? 'ok' : 'ausente'} _fbc=${c.fbc ? 'ok' : 'ausente'}`, 'color: #10b981; font-size: 11px;');
       }
     });
   }
