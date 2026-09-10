@@ -249,6 +249,40 @@ function parseMmTracker(raw) {
 // 📡 Envia o payload bruto de TODOS os eventos do Shopify para um endpoint HTTP configurável.
 // Ativado passando `webhookUrl` em mymetric_onetag_shopify_init. Não interfere no fluxo de
 // GA4/Meta/etc, é apenas um "espelho" cru dos eventos capturados via analytics.subscribe('all_events').
+// 🆕 Gera o mm_fid aqui, no pixel, quando ele ainda não existe.
+//
+// Numa visita nova o primeiro page_viewed sai antes de qualquer identificação
+// existir, e não é questão de ajustar timing: o pixel dispara sem esperar rede,
+// enquanto o /id precisa do GTM carregar e de uma ida ao servidor. Essa corrida
+// é perdida por construção, então o primeiro evento — o mais frequente de todos
+// — saía sempre anônimo.
+//
+// O valor gerado aqui é proposto ao servidor pela tag do topo, que o lê e manda
+// no /id. O servidor adota em vez de cunhar outro, senão a mesma pessoa ficaria
+// com dois ids: um no primeiro evento e outro em todo o resto.
+//
+// A string inteira vai num argumento só porque o browser.cookie.set, com um
+// argumento, faz `document.cookie = valor` verbatim — é o que permite definir
+// max-age. Com dois argumentos ele monta `nome=valor` e o cookie nasceria de
+// sessão. Sem domain: fica host-only no top frame, o que basta, porque quem
+// carrega o valor adiante é o payload, não o header Cookie.
+function garantirFid() {
+  if (mmCookieCache.mm_fid) return Promise.resolve();
+  return readTopFrameCookie('mm_fid')
+    .then(valor => {
+      if (valor) { mmCookieCache.mm_fid = valor; return; }
+      if (typeof browser === 'undefined' || !browser || !browser.cookie ||
+          typeof browser.cookie.set !== 'function') return;
+      let hex = '';
+      while (hex.length < 16) hex += Math.random().toString(16).slice(2);
+      const gerado = Date.now() + '.' + hex.slice(0, 16);
+      mmCookieCache.mm_fid = gerado;
+      try {
+        browser.cookie.set('mm_fid=' + gerado + '; max-age=34560000; path=/');
+      } catch (e) { /* cookie bloqueado: o valor ainda vai neste evento */ }
+    })
+    .catch(() => {});
+}
 function sendEventToWebhook(event, customerSlug, debugMode = false) {
   if (!mmWebhookUrl) return;
 
@@ -263,7 +297,7 @@ function sendEventToWebhook(event, customerSlug, debugMode = false) {
     : Promise.race([
         refreshMmCookies(),
         new Promise(resolve => setTimeout(resolve, 400))
-      ]);
+      ]).then(garantirFid);
 
   pronto.then(() => montarEEnviar(event, customerSlug, debugMode));
 }
