@@ -271,14 +271,25 @@ function garantirFid() {
   return readTopFrameCookie('mm_fid')
     .then(valor => {
       if (valor) { mmCookieCache.mm_fid = valor; return; }
-      if (typeof browser === 'undefined' || !browser || !browser.cookie ||
-          typeof browser.cookie.set !== 'function') return;
       let hex = '';
       while (hex.length < 16) hex += Math.random().toString(16).slice(2);
       const gerado = Date.now() + '.' + hex.slice(0, 16);
+      // Guarda no cache ANTES de tentar gravar: mesmo que a escrita falhe, este
+      // evento já sai identificado, que é o ponto todo.
       mmCookieCache.mm_fid = gerado;
+      const str = 'mm_fid=' + gerado + '; max-age=34560000; path=/';
       try {
-        browser.cookie.set('mm_fid=' + gerado + '; max-age=34560000; path=/');
+        // O `browser` da Web Pixels API nem sempre existe como global: quando o
+        // custom pixel carrega este script de fora, o binding fica no escopo do
+        // callback e não chega aqui. Medido no IWS: `typeof browser` é
+        // "undefined" e é o document.cookie que responde — o mesmo caminho que o
+        // readTopFrameCookie já usa para ler o mm_tracker.
+        if (typeof browser !== 'undefined' && browser && browser.cookie &&
+            typeof browser.cookie.set === 'function') {
+          browser.cookie.set(str);
+        } else {
+          document.cookie = str;
+        }
       } catch (e) { /* cookie bloqueado: o valor ainda vai neste evento */ }
     })
     .catch(() => {});
