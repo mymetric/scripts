@@ -57,9 +57,19 @@ function set_cookie(name, value, expirationDays) {
   //
   // Valor = variante que todos passam a ver (0 = original, 1 = variante).
   var EXPERIMENTOS_ENCERRADOS = {
-      // Coroas para Velório — "Checkout Externo Botao Comprar". 100% na variante
-      // (checkout novo em checkout.coroasparavelorio.com.br) desde 04/09/2026.
-      "RKdQkw183MTHhT3": 1
+      // Coroas para Velório — "Checkout Externo Botao Comprar".
+      //
+      // 16/09/2026, 19:30 UTC: VOLTOU PARA 0 (checkout original do site).
+      // A API da Laços começou a responder 429 {"message":"Limit Exceeded"} às
+      // 19:04 UTC — quota do usage plan no AWS API Gateway esgotada — e o
+      // checkout novo depende dela para gravar o pedido. Resultado: 26
+      // tentativas de cartão, 2 clientes, nenhum pedido criado. O checkout do
+      // site não passa por essa API e continua vendendo.
+      //
+      // Voltar para 1 assim que a Laços liberar a quota.
+      // Estava em 1 (checkout novo em checkout.coroasparavelorio.com.br) desde
+      // 04/09/2026.
+      "RKdQkw183MTHhT3": 0
   };
 
   // experiment
