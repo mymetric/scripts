@@ -205,19 +205,54 @@ let mmCookieCache = { mm_tracker: null, mm_fid: null, mm_cid: null, fbp: null, f
 // não enxerga os cookies da loja; a Web Pixels API expõe `browser.cookie.get` (async)
 // justamente pra isso. Fora do sandbox (instalação via tema/GTM, ex: Yampi) o
 // `browser` não existe e o fallback pro document.cookie nativo mantém o comportamento.
+// 🍪 Todos os valores de um cookie no document.cookie, na ordem em que o browser
+// os lista. O nome PODE aparecer mais de uma vez: o mm_fid nasce host-only aqui
+// (garantirFid, que escreve sem `domain=`) e o /id devolve o MESMO nome com
+// `Domain=`, então a partir da primeira visita existem dois.
+function valoresNoDocumento(name) {
+  const achados = [];
+  try {
+    const pares = document.cookie ? document.cookie.split('; ') : [];
+    for (let i = 0; i < pares.length; i++) {
+      if (pares[i].indexOf(name + '=') !== 0) continue;
+      const valor = pares[i].slice(name.length + 1).split(';')[0];
+      if (valor) achados.push(valor);
+    }
+  } catch (e) { /* cookie inacessível: segue sem */ }
+  return achados;
+}
+// 🧹 Dois mm_fid com valores DIFERENTES: o host-only foi cunhado aqui numa carga
+// em que a leitura falhou, e o outro é o do /id (o par do mm_fpid, que é o id
+// que o servidor conhece). Apagar sem `domain=` alcança só o host-only, então
+// sobra o do servidor e a pessoa volta a ter um id só.
+function limparFidDuplicado() {
+  const achados = valoresNoDocumento('mm_fid');
+  if (achados.length < 2) return;
+  if (achados.every(v => v === achados[0])) return;
+  try { document.cookie = 'mm_fid=; max-age=0; path=/'; } catch (e) { /* bloqueado: segue */ }
+}
 function readTopFrameCookie(name) {
   try {
     if (typeof browser !== 'undefined' && browser && browser.cookie && typeof browser.cookie.get === 'function') {
       return Promise.resolve(browser.cookie.get(name)).catch(() => null);
     }
-    const parts = ('; ' + document.cookie).split('; ' + name + '=');
-    return Promise.resolve(parts.length === 2 ? parts.pop().split(';').shift() : null);
+    // ⚠️ Aqui havia `parts.length === 2 ? ... : null`, que exigia ocorrência
+    // ÚNICA e devolvia null justamente quando o cookie existia duas vezes — o
+    // estado normal depois do /id adotar o fid proposto. Com null o garantirFid
+    // cunhava um mm_fid novo A CADA page view, e como o client_id da
+    // propriedade de funil é derivado dele, cada page view virava um usuário
+    // novo no GA4 (medido no IWS em 19/09/2026: 3 cargas, 3 ids).
+    const achados = valoresNoDocumento(name);
+    return Promise.resolve(achados.length ? achados[0] : null);
   } catch (e) {
     return Promise.resolve(null);
   }
 }
 // 🍪 Revalida o cache de cookies. Chamada na init e após cada envio (para o próximo evento).
 function refreshMmCookies() {
+  // Antes de ler: se sobrou mm_fid duplicado de uma visita anterior, fica só o
+  // do servidor — senão a leitura devolveria o host-only cunhado aqui.
+  limparFidDuplicado();
   return Promise.all([
     readTopFrameCookie('mm_tracker'),
     readTopFrameCookie('mm_fid'),
