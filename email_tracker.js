@@ -200,6 +200,18 @@ function sendToMyMetric(field, value, identifier) {
 
   var formData = JSON.stringify(payload);
 
+  // Usa sendBeacon primeiro: forms que navegam/redirecionam no submit (ex.: method=get)
+  // cancelam um XHR/fetch em andamento antes da resposta chegar. sendBeacon é
+  // fire-and-forget e sobrevive à navegação da página.
+  if (navigator.sendBeacon) {
+    var sent = navigator.sendBeacon(postUrl, new Blob([formData], { type: 'application/json' }));
+    if (sent) {
+      console.log('[tracker] MyMetric — dados enviados via sendBeacon.');
+      return;
+    }
+    console.warn('[tracker] MyMetric — sendBeacon falhou, tentando XHR.');
+  }
+
   var xhr = new XMLHttpRequest();
   xhr.open('POST', postUrl, true);
   xhr.setRequestHeader('Content-Type', 'application/json');
