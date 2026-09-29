@@ -322,9 +322,10 @@ function createPopup(
   document.body.appendChild(overlay);
 
   if (options.closeX) {
-    var closeX = document.createElement('button');
+    // div, não button: o CSS dos clientes costuma estilizar todo "button" do popup
+    var closeX = document.createElement('div');
     closeX.id = 'image-popup-close-x';
-    closeX.type = 'button';
+    closeX.setAttribute('role', 'button');
     closeX.setAttribute('aria-label', 'Fechar');
     closeX.innerHTML = '&times;';
     closeX.style.cssText = 'position:absolute;top:6px;right:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);color:#333;border:none;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;z-index:100002;padding:0;';
