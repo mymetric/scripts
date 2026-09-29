@@ -143,8 +143,13 @@
       }
       if (!escolhido) return;
       if (previa) apagaTravas();
-      setTimeout(function () { mostra(slug, escolhido, !!previa); },
-                 previa ? 0 : (escolhido.atraso_segundos || 0) * 1000);
+      var abre = function () {
+        setTimeout(function () { mostra(slug, escolhido, !!previa); },
+                   previa ? 0 : (escolhido.atraso_segundos || 0) * 1000);
+      };
+      // a tag pode disparar no início do pageview, antes de existir o <body>
+      if (document.body) abre();
+      else document.addEventListener('DOMContentLoaded', abre);
     }).catch(function (e) { console.warn('[mm popup]', e); });
   }
 
