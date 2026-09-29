@@ -144,6 +144,16 @@ var disablePhoneField = false;
 </script>
 ```
 
+## MyMetric Popup Loader
+
+Uma tag só no GTM para todos os popups do cliente. Texto, imagem, datas e
+regras de página ficam no hub (aba E-mail > Popups). Prévia de um popup
+desligado: `?mm_popup=<popup_id>`.
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/mymetric/scripts@main/popup-loader.js" data-slug="coffeemais"></script>
+```
+
 ## MyMetric Email & Phone Tracker
 
 ```html
