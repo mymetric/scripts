@@ -1,4 +1,4 @@
-// v 1.0
+// v 1.1 — options (19º parâmetro) opcional
 
 function getCookie(name) {
   var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
@@ -59,8 +59,17 @@ function createPopup(
   preQuizSubtitle = '',
   preQuizExplanation = '',
   preQuizButtons = [],
-  identifier = ''
+  identifier = '',
+  options = {}
 ) {
+  // `options` (opcional, usado pelo popup-loader.js; embeds antigos não passam):
+  //   placeholders: {name, email, phone}  texto dos campos
+  //   birthday: true                      pede data de nascimento (opcional)
+  //   requirePhone: true                  telefone com DDD obrigatório
+  //   closeX: true                        botão "X" no canto (id image-popup-close-x)
+  //   couponCopy: true                    o 1º <strong> da mensagem final vira cupom com botão de copiar
+  options = options || {};
+  var ph = options.placeholders || {};
 
   // Verifica se a URL contém "crm", "email" ou "mautic"
   const currentUrl = window.location.href.toLowerCase();
@@ -166,7 +175,7 @@ function createPopup(
   subtitle.style.lineHeight = '1.2';
 
   var nameInput = document.createElement('input');
-  nameInput.setAttribute('placeholder', 'Seu Nome');
+  nameInput.setAttribute('placeholder', ph.name || 'Seu Nome');
   nameInput.setAttribute('name', 'name');
   nameInput.setAttribute('id', popupIdentifier + '-name');
   nameInput.setAttribute('type', 'text');
@@ -178,7 +187,7 @@ function createPopup(
   nameInput.style.fontSize = '16px';
 
   var emailInput = document.createElement('input');
-  emailInput.setAttribute('placeholder', 'Seu E-mail');
+  emailInput.setAttribute('placeholder', ph.email || 'Seu E-mail');
   emailInput.setAttribute('name', 'email');
   emailInput.setAttribute('id', popupIdentifier + '-email');
   emailInput.setAttribute('type', 'email');
@@ -192,7 +201,7 @@ function createPopup(
   var phoneInput;
   if (!disablePhoneField) {
     phoneInput = document.createElement('input');
-    phoneInput.setAttribute('placeholder', 'Seu Telefone');
+    phoneInput.setAttribute('placeholder', ph.phone || 'Seu Telefone');
     phoneInput.setAttribute('name', 'phone');
     phoneInput.setAttribute('id', popupIdentifier + '-phone');
     phoneInput.setAttribute('type', 'tel');
@@ -214,6 +223,22 @@ function createPopup(
         event_name: "field_changed",
         field_name: e.target.name
       });
+    });
+  }
+
+  var birthdayInput;
+  if (options.birthday) {
+    birthdayInput = emailInput.cloneNode();
+    birthdayInput.setAttribute('placeholder', ph.birthday || 'Sua Data de Nascimento (DD/MM/AAAA)');
+    birthdayInput.setAttribute('name', 'birthday');
+    birthdayInput.setAttribute('id', popupIdentifier + '-birthday');
+    birthdayInput.setAttribute('type', 'text');
+    birthdayInput.setAttribute('maxlength', '10');
+    birthdayInput.setAttribute('inputmode', 'numeric');
+    birthdayInput.addEventListener('input', function(e) {
+      var d = e.target.value.replace(/\D/g, '');
+      e.target.value = d.length > 4 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4, 8)
+        : d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2, 4) : d;
     });
   }
 
@@ -278,6 +303,9 @@ function createPopup(
   formContainer.appendChild(subtitle);
   formContainer.appendChild(nameInput);
   formContainer.appendChild(emailInput);
+  if (birthdayInput) {
+    formContainer.appendChild(birthdayInput);
+  }
   if (!disablePhoneField) {
     formContainer.appendChild(phoneInput);
   }
@@ -292,6 +320,62 @@ function createPopup(
 
   overlay.appendChild(container);
   document.body.appendChild(overlay);
+
+  if (options.closeX) {
+    var closeX = document.createElement('button');
+    closeX.id = 'image-popup-close-x';
+    closeX.type = 'button';
+    closeX.setAttribute('aria-label', 'Fechar');
+    closeX.innerHTML = '&times;';
+    closeX.style.cssText = 'position:absolute;top:6px;right:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);color:#333;border:none;border-radius:50%;font-size:22px;line-height:1;cursor:pointer;z-index:100002;padding:0;';
+    closeX.addEventListener('click', function(e) {
+      e.preventDefault();
+      // o link de fechar grava o cookie e o evento; depois do cadastro ele vira "Fechar"
+      closeLink.click();
+    });
+    container.appendChild(closeX);
+  }
+
+  function addCouponCopy(box) {
+    var strong = box.querySelector('strong');
+    if (!strong) return;
+    var code = strong.textContent.trim();
+    strong.style.cssText = 'display:block;background:#fff;border:2px dashed currentColor;padding:10px 20px;margin:15px 0 10px;font-size:20px;line-height:1.5;';
+    var copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'mm-coupon-copy';
+    copy.textContent = 'COPIAR CUPOM';
+    copy.style.cssText = 'background:#fff;border:none;color:' + buttonBgColor + ';padding:10px 20px;border-radius:5px;cursor:pointer;font-weight:bold;font-size:14px;margin:0 0 15px;';
+    copy.addEventListener('click', function() {
+      var ok = function() {
+        copy.textContent = 'COPIADO!';
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: 'popup-coupon', action: 'copy', coupon: code });
+        setTimeout(function() { copy.textContent = 'COPIAR CUPOM'; }, 2000);
+      };
+      var fallback = function() {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+        } catch (e) {}
+        ok();
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(ok, fallback);
+      } else {
+        fallback();
+      }
+    });
+    box.parentNode.insertBefore(copy, box.nextSibling);
+  }
+
+  function validBirthday(val) {
+    var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(val);
+    if (!m) return false;
+    var dia = +m[1], mes = +m[2], ano = +m[3];
+    return dia >= 1 && dia <= 31 && mes >= 1 && mes <= 12 && ano >= 1900 && ano <= new Date().getFullYear();
+  }
 
   function validateEmail(email) {
     var regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -325,6 +409,18 @@ function createPopup(
       errors.push('Email inválido.');
     }
 
+    var birthday = birthdayInput ? birthdayInput.value.trim() : '';
+    if (birthday && !validBirthday(birthday)) {
+      errors.push('Data de nascimento inválida. Use o formato DD/MM/AAAA.');
+    }
+
+    if (options.requirePhone && !disablePhoneField) {
+      var digits = phone.replace(/\D/g, '').length;
+      if (digits < 11) {
+        errors.push(digits === 0 ? 'Telefone obrigatório.' : 'Telefone incompleto, digite seu telefone completo.');
+      }
+    }
+
     if (errors.length > 0) {
       errorMessage.innerHTML = errors.join('<br>');
       errorMessage.style.display = 'block';
@@ -346,6 +442,7 @@ function createPopup(
         mm_tracker: mmTracker,
         title_text: titleText,
         subtitle_text: subtitleText,
+        birthday: birthday || undefined,
         user_meta_data: {
           pre_quiz: selectedPreQuizOption
         }
@@ -386,6 +483,9 @@ function createPopup(
 
           formContainer.innerHTML = '';
           formContainer.appendChild(couponMessage);
+          if (options.couponCopy) {
+            addCouponCopy(couponMessage);
+          }
           closeLink.innerHTML = 'Fechar';
           closeLink.style.fontSize = '15px';
           closeLink.style.padding = '10px 0';

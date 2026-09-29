@@ -1,4 +1,4 @@
-// MyMetric Popup Loader v1.0
+// MyMetric Popup Loader v1.1
 //
 // Uma tag só no GTM no lugar de uma tag por popup. O texto, a imagem, as
 // cores, as datas e as regras de página de cada popup são editados no hub
@@ -60,28 +60,6 @@
     document.head.appendChild(js);
   }
 
-  // Telefone obrigatório: o popup.js só valida nome e e-mail. Mesmo remendo
-  // que as tags da Coffee++ usavam, agora num lugar só.
-  function exigeTelefone() {
-    var espera = setInterval(function () {
-      var botao = document.querySelector('#image-popup-overlay button');
-      var tel = document.querySelector('#image-popup-overlay input[name="phone"]');
-      if (!botao || !tel) return;
-      clearInterval(espera);
-      botao.addEventListener('click', function (e) {
-        var n = tel.value.replace(/\D/g, '').length;
-        if (n >= 11) return;
-        var erro = tel.nextElementSibling;
-        if (erro) {
-          erro.innerHTML = n === 0 ? 'Telefone obrigatório.' : 'Telefone incompleto, digite seu telefone completo.';
-          erro.style.display = 'block';
-        }
-        e.stopImmediatePropagation();
-      }, true);
-    }, 300);
-    setTimeout(function () { clearInterval(espera); }, 60000);
-  }
-
   function mostra(slug, p, previa) {
     if (p.css_extra) {
       var st = document.createElement('style');
@@ -100,9 +78,15 @@
         img, p.titulo, p.subtitulo, POSTS + evento, p.botao_texto, p.fechar_texto,
         p.mensagem_final, '', p.dias_fechado, p.cor_botao_texto, p.cor_botao_fundo,
         p.telefone === 'oculto',
-        false, '', '', '', [], p.id
+        false, '', '', '', [], p.id,
+        {
+          placeholders: { name: p.placeholder_nome, email: p.placeholder_email, phone: p.placeholder_telefone },
+          birthday: !!p.aniversario,
+          requirePhone: p.telefone === 'obrigatorio',
+          closeX: !!p.botao_x,
+          couponCopy: !!p.copiar_cupom
+        }
       );
-      if (p.telefone === 'obrigatorio') exigeTelefone();
     });
   }
 
