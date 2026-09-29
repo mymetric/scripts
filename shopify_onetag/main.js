@@ -366,6 +366,11 @@ function montarEEnviar(event, customerSlug, debugMode) {
     mm_cid: mmCookieCache.mm_cid,
     fbp: mmCookieCache.fbp,
     fbc: mmCookieCache.fbc,
+    // clientId do Web Pixel = cookie _shopify_y, gravado pela própria loja (mesmo
+    // IP do site). No Safari ele dura o ano, enquanto o mm_fpid (events.<cliente>,
+    // CNAME para o Google) é cortado em 7 dias. O Heimdall usa como âncora para
+    // reconhecer quem voltou com fpid novo.
+    shopify_client_id: event?.clientId || null,
     context: event?.context,
     data: event?.data
   };
