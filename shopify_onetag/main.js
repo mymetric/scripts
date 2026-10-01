@@ -179,9 +179,22 @@ function trackGA4Event(eventName, eventData, pageLocation, pageTitle) {
   }
 }
 // 📘 Função centralizada para disparos do Meta Pixel
+//
+// 🔁 Dedup com o servidor: o Heimdall manda os mesmos eventos de funil
+// (PageView, ViewContent, AddToCart, InitiateCheckout, AddPaymentInfo) pela API
+// de conversões, com event_id = o id do evento da Shopify. O Meta só junta o
+// disparo do navegador com o do servidor quando os dois trazem o MESMO id; sem
+// ele o evento conta duas vezes no pixel. Por isso o eventID é o event.id do
+// evento que está sendo tratado (mmMetaEventId, setado na entrada de
+// mymetric_onetag_shopify_events).
+let mmMetaEventId = null;
 function trackMetaEvent(eventName, eventData = {}) {
   if (window.fbq) {
-    window.fbq('track', eventName, eventData);
+    if (mmMetaEventId) {
+      window.fbq('track', eventName, eventData, { eventID: mmMetaEventId });
+    } else {
+      window.fbq('track', eventName, eventData);
+    }
   }
 }
 // 📡 URL do endpoint de webhook (configurado via mymetric_onetag_shopify_init)
@@ -555,8 +568,9 @@ function initMetaPixel(metaIds, debugMode = false) {
       console.log(`%c ✅ Meta Pixel configurado: ${cleanId}`, 'color: #10b981; font-size: 10px;');
     }
   });
-  // Enviar PageView inicial
-  window.fbq('track', 'PageView');
+  // Sem PageView aqui: o evento page_viewed da Shopify já manda um PageView por
+  // página, com eventID para casar com o servidor. Este inicial não tinha par
+  // nenhum e duplicava a contagem.
 }
 // 🎵 Inicializar TikTok Pixel
 function initTikTokPixel(tiktokIds, debugMode = false) {
@@ -574,6 +588,7 @@ function initPinterestTag(pinterestIds, debugMode = false) {
 }
 // 🛍️ Configurar eventos do Shopify
 function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMode = false) {
+  mmMetaEventId = event?.id || null;
   // Extrair contexto da página para todos os eventos GA4 e Telemetry (exceto page_view, que já tem)
   const pageLocation = event.context?.document?.location?.href || window.location.href;
   const pageTitle = event.context?.document?.title || document.title;
