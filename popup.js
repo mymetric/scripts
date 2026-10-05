@@ -161,6 +161,31 @@ function createPopup(
     formContainer.style.width = '100%';
   }
 
+  // Sem URL de imagem: versão limpa, só texto. O cartão encolhe para a largura
+  // de um formulário e a altura acompanha o conteúdo, em vez da caixa de
+  // 800x480 (ou 95% da tela no celular) com metade vazia.
+  var semImagem = !imgUrl || !String(imgUrl).trim();
+  if (semImagem) {
+    container.classList.add('mm-popup-sem-imagem');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.height = 'auto';
+    container.style.overflowY = 'auto';
+    if (!isMobileDevice()) {
+      container.style.width = '420px';
+      container.style.maxWidth = '92vw';
+      container.style.maxHeight = '90vh';
+    } else {
+      container.style.width = '92%';
+      container.style.maxWidth = '420px';
+      container.style.maxHeight = '90%';
+    }
+    formContainer.style.width = '100%';
+    formContainer.style.boxSizing = 'border-box';
+    formContainer.style.padding = isMobileDevice() ? '28px 18px 20px' : '36px 32px 26px';
+    formContainer.style.overflow = 'visible';
+  }
+
   var title = document.createElement('h2');
   title.innerHTML = titleText;
   title.style.textAlign = 'center';
@@ -286,6 +311,9 @@ function createPopup(
 
   if (isMetaBrowser()) {
     image.style.height = '45%';
+    if (semImagem) {
+      formContainer.style.paddingTop = '72px';
+    }
     var ribbon = document.createElement('div');
     ribbon.setAttribute('class', 'popup-ribbon');
     ribbon.innerHTML = 'Informe seu e-mail ou abra o navegador externo para uma experiência completa<span style="font-size: 25px;position: absolute;right: 15px;top: 15px;">&#x2191;</span>';
@@ -313,7 +341,7 @@ function createPopup(
   formContainer.appendChild(submitButton);
   formContainer.appendChild(closeLink);
 
-  if (!shortScreen) {
+  if (!shortScreen && !semImagem) {
     container.appendChild(image);
   }
   container.appendChild(formContainer);
@@ -341,7 +369,8 @@ function createPopup(
     var strong = box.querySelector('strong');
     if (!strong) return;
     var code = strong.textContent.trim();
-    strong.style.cssText = 'display:block;background:#fff;border:2px dashed currentColor;padding:10px 20px;margin:15px 0 10px;font-size:20px;line-height:1.5;';
+    // cor do botão no código: a caixa é branca e o texto da mensagem herda a cor do texto do botão (quase sempre branco)
+    strong.style.cssText = 'display:block;background:#fff;color:' + buttonBgColor + ';border:2px dashed ' + buttonBgColor + ';padding:10px 20px;margin:15px 0 10px;font-size:20px;line-height:1.5;';
     var copy = document.createElement('button');
     copy.type = 'button';
     copy.className = 'mm-coupon-copy';
