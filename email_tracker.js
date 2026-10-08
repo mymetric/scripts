@@ -299,16 +299,76 @@ function sendToMyMetric(field, value, identifier) {
 
   // ─── Captura de Telefone ───────────────────────────────────────────────────
 
+  // Campo de cartão usa input[type="tel"] para abrir o teclado numérico, e o
+  // seletor padrão de telefone pega esse tipo — de ago a out/2026 o número do
+  // cartão subiu cru como "phone" em ~10 lojas. Por isso o telefone passa por
+  // duas barreiras: o campo não pode se descrever como pagamento/documento, e
+  // o valor tem que ter formato de telefone (nunca 14+ dígitos).
+  var RE_CAMPO_PROIBIDO = /(card|cart[aã]o|\bcc\b|cc[-_]|cvv|cvc|credit|cr[eé]dito|d[eé]bito|payment|pagamento|pagbank|pagar|mercadopago|\bmp\b|validade|expir|cpf|cnpj|documento|\brg\b|senha|password|cupom|voucher)/i;
+
+  function descreveCampo(input) {
+    var form = input.closest ? input.closest('form') : null;
+    var partes = [input.name, input.id, typeof input.className === 'string' ? input.className : '',
+      input.placeholder, input.getAttribute('autocomplete'), input.getAttribute('aria-label'),
+      input.getAttribute('data-testid')];
+    if (form) {
+      partes.push(form.id, form.getAttribute('name'), form.getAttribute('action'),
+        typeof form.className === 'string' ? form.className : '');
+    }
+    return partes.join(' ');
+  }
+
+  function campoProibido(input) {
+    var ac = input.getAttribute('autocomplete') || '';
+    if (/^cc-|\scc-/.test(ac)) return true;
+    return RE_CAMPO_PROIBIDO.test(descreveCampo(input));
+  }
+
+  function passaLuhn(digits) {
+    var soma = 0;
+    for (var i = 0; i < digits.length; i++) {
+      var d = +digits.charAt(digits.length - 1 - i);
+      if (i % 2 === 1) { d *= 2; if (d > 9) d -= 9; }
+      soma += d;
+    }
+    return soma % 10 === 0;
+  }
+
+  // Brasil: 10 dígitos fixo (3º dígito 2-5) ou 11 celular (3º dígito 9),
+  // com ou sem o 55 na frente. Fora do Brasil só com '+' explícito.
+  function pareceTelefone(raw) {
+    var s = String(raw || '').trim();
+    var d = s.replace(/\D/g, '');
+    if (d.length >= 13 && d.length <= 19 && passaLuhn(d) && d.indexOf('55') !== 0) return false;
+    if (s.charAt(0) === '+' && d.indexOf('55') !== 0) return d.length >= 8 && d.length <= 13;
+    if ((d.length === 12 || d.length === 13) && d.indexOf('55') === 0) d = d.slice(2);
+    if (d.length === 11) return d.charAt(2) === '9';
+    if (d.length === 10) return /[2-5]/.test(d.charAt(2));
+    return false;
+  }
+
+  // Limpa o mm_phone gravado por versões anteriores quando não é telefone
+  // (cartão de crédito ficou nesse cookie por até 365 dias).
+  (function limpaCookieTelefone() {
+    var atual = getCookie('mm_phone');
+    if (!atual) return;
+    var valor = '';
+    try { valor = atob(decodeURIComponent(atual)); } catch (err) { valor = ''; }
+    if (!pareceTelefone(valor)) {
+      document.cookie = 'mm_phone=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    }
+  })();
+
   function logPhoneOnChange(input) {
     if (input._phoneListenerAttached) return;
     input._phoneListenerAttached = true;
+    if (campoProibido(input)) return;
 
     input.addEventListener('change', function (e) {
       var rawPhone = e.target.value;
 
-      // Rejeita se o valor tiver menos de 10 dígitos — não é um telefone válido
-      if (rawPhone.replace(/\D/g, '').length < 10) {
-        console.warn('[tracker] Telefone ignorado — valor não parece ser um telefone:', rawPhone);
+      // Nunca logar o valor rejeitado: pode ser número de cartão.
+      if (campoProibido(e.target) || !pareceTelefone(rawPhone)) {
         return;
       }
 
