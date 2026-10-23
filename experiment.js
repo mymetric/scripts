@@ -68,7 +68,11 @@ function set_cookie(name, value, expirationDays) {
       // responder 429 {"message":"Limit Exceeded"} (quota do usage plan no AWS
       // API Gateway) e o teste voltou para 0 por 26 tentativas de cartão sem
       // pedido criado.
-      "RKdQkw183MTHhT3": 1
+      "RKdQkw183MTHhT3": 1,
+      // WTennis — "Frete gratis na PDP mobile (M2)". Encerrado em 23/10/2026
+      // a pedido do cliente (Paulo), com 17 dias: receita por visitante
+      // R$ 8,30 x R$ 8,89 (+7%, 72% de confiança). Fica a variante.
+      "KQ7rW2mXv9TbL4s": 1
   };
 
   // experiment
