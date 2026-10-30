@@ -72,7 +72,11 @@ function set_cookie(name, value, expirationDays) {
       // WTennis — "Frete gratis na PDP mobile (M2)". Encerrado em 23/10/2026
       // a pedido do cliente (Paulo), com 17 dias: receita por visitante
       // R$ 8,30 x R$ 8,89 (+7%, 72% de confiança). Fica a variante.
-      "KQ7rW2mXv9TbL4s": 1
+      "KQ7rW2mXv9TbL4s": 1,
+      // Kaisan — "Carrinho: quanto falta pro frete grátis" (mobile). Encerrado
+      // em 30/10/2026 com 21 dias: receita por visitante R$ 168 x R$ 184
+      // (+9%, 94% de confiança). Fica a variante.
+      "cI49KJBaXxJvh2v": 1
   };
 
   // experiment
