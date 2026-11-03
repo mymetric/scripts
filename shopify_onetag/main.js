@@ -178,6 +178,19 @@ function trackGA4Event(eventName, eventData, pageLocation, pageTitle) {
     window.gtag("event", eventName, params);
   }
 }
+// 🚚 Um add_shipping_info por checkout.
+// No checkout de página única da Shopify, checkout_address_info_submitted e
+// checkout_shipping_info_submitted disparam de novo a cada mudança de endereço ou
+// de frete (às vezes 3x no mesmo segundo). Os dois viram add_shipping_info no GA4,
+// então sem trava saíam ~5 por sessão (Allcatrazes, out/26: 5.204 eventos em
+// 1.017 sessões). A chave é o token do checkout; sem token, vale um por carga.
+const mmShippingInfoEnviado = new Set();
+function primeiroShippingInfoDoCheckout(checkout) {
+  const chave = checkout?.token || 'sem_token';
+  if (mmShippingInfoEnviado.has(chave)) return false;
+  mmShippingInfoEnviado.add(chave);
+  return true;
+}
 // 📘 Função centralizada para disparos do Meta Pixel
 //
 // 🔁 Dedup com o servidor: o Heimdall manda os mesmos eventos de funil
@@ -737,11 +750,13 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       shippingMethod: event.data.checkout?.shippingLine?.title || 'Standard'
     });
    
-    trackGA4Event("add_shipping_info", {
-      currency: event.data.checkout?.currencyCode,
-      value: event.data.checkout?.totalPrice?.amount,
-      shipping_tier: event.data.checkout?.shippingLine?.title
-    }, pageLocation, pageTitle);
+    if (primeiroShippingInfoDoCheckout(event.data.checkout)) {
+      trackGA4Event("add_shipping_info", {
+        currency: event.data.checkout?.currencyCode,
+        value: event.data.checkout?.totalPrice?.amount,
+        shipping_tier: event.data.checkout?.shippingLine?.title
+      }, pageLocation, pageTitle);
+    }
    
   }
   if(event.name === "alert_displayed") {
@@ -805,11 +820,13 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       country: address?.country
     });
    
-    trackGA4Event("add_shipping_info", {
-      currency: checkout?.currencyCode,
-      value: checkout?.totalPrice?.amount,
-      shipping_tier: checkout?.shippingLine?.title
-    }, pageLocation, pageTitle);
+    if (primeiroShippingInfoDoCheckout(checkout)) {
+      trackGA4Event("add_shipping_info", {
+        currency: checkout?.currencyCode,
+        value: checkout?.totalPrice?.amount,
+        shipping_tier: checkout?.shippingLine?.title
+      }, pageLocation, pageTitle);
+    }
    
   }
   if(event.name === "checkout_contact_info_submitted") {
