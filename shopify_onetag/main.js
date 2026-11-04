@@ -398,7 +398,10 @@ function montarEEnviar(event, customerSlug, debugMode) {
     // reconhecer quem voltou com fpid novo.
     shopify_client_id: event?.clientId || null,
     context: event?.context,
-    data: event?.data
+    data: event?.data,
+    // Evento de app (analytics.publish, ex.: loox:story_open) traz o detalhe em
+    // customData, nao em data. Sem isto o destino recebia so o nome do evento.
+    custom_data: event?.customData
   };
 
   fetch(mmWebhookUrl, {
