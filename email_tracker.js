@@ -299,11 +299,10 @@ function sendToMyMetric(field, value, identifier) {
 
   // ─── Captura de Telefone ───────────────────────────────────────────────────
 
-  // Campo de cartão usa input[type="tel"] para abrir o teclado numérico, e o
-  // seletor padrão de telefone pega esse tipo — de ago a out/2026 o número do
-  // cartão subiu cru como "phone" em ~10 lojas. Por isso o telefone passa por
-  // duas barreiras: o campo não pode se descrever como pagamento/documento, e
-  // o valor tem que ter formato de telefone (nunca 14+ dígitos).
+  // Campos de pagamento também costumam usar input[type="tel"] (teclado
+  // numérico). O telefone só é lido depois de duas barreiras: o campo não pode
+  // se descrever como pagamento/documento, e o valor tem que ter formato de
+  // telefone.
   var RE_CAMPO_PROIBIDO = /(card|cart[aã]o|\bcc\b|cc[-_]|cvv|cvc|credit|cr[eé]dito|d[eé]bito|payment|pagamento|pagbank|pagar|mercadopago|\bmp\b|validade|expir|cpf|cnpj|documento|\brg\b|senha|password|cupom|voucher)/i;
 
   function descreveCampo(input) {
@@ -347,8 +346,7 @@ function sendToMyMetric(field, value, identifier) {
     return false;
   }
 
-  // Limpa o mm_phone gravado por versões anteriores quando não é telefone
-  // (cartão de crédito ficou nesse cookie por até 365 dias).
+  // Remove o cookie mm_phone quando o valor guardado não tem formato de telefone.
   (function limpaCookieTelefone() {
     var atual = getCookie('mm_phone');
     if (!atual) return;
