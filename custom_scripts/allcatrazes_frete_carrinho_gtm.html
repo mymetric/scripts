@@ -1,0 +1,113 @@
+<script>
+/* MyMetric Hub - Shipping Calc (carrinho) — Allcatrazes, GTM-5NZ32QBG, All Pages.
+   A calculadora "Calcular frete" do drawer é do tema: valida o CEP, pega a UF no ViaCEP e
+   chama /cart/shipping_rates.json. Esta tag não mexe nela: observa essa chamada e manda
+   allcatrazes_shipping_calculation (gtms.shipping_calculation) no formato da Linus, step
+   'view_cart', com todas as opções de frete por item. O checkout é coberto pelo pixel
+   "MyMetric - Frete" do Customer Events (step 'add_shipping_info'). */
+(function () {
+  if (window.__mmFreteCarrinho || !window.fetch) return;
+  window.__mmFreteCarrinho = true;
+  var NOME = 'allcatrazes_shipping_calculation';
+  var DEST = 'https://events.mymetric.app/posts?event_name=' + NOME;
+  var GA4 = 'ND2G5PRHK4';
+  var original = window.fetch;
+  var enviados = {};
+
+  function cookie(n) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)'));
+    return m ? m[1] : null;
+  }
+  function pseudoId(ga) {
+    if (!ga) return null;
+    var p = String(ga).split('.');
+    return p.length >= 4 ? p.slice(-2).join('.') : null;
+  }
+  function sessionId(v) {
+    if (!v) return null;
+    var m = String(v).match(/\.s(\d+)\$/) || String(v).match(/^GS1\.\d\.(\d+)\./);
+    return m ? m[1] : null;
+  }
+  function tracker() {
+    try { return JSON.parse(decodeURIComponent(cookie('mm_tracker') || '')) || {}; } catch (e) { return {}; }
+  }
+  function horas(dias, ultimo) {
+    if (!dias || !dias.length) return null;
+    var d = Number(dias[ultimo ? dias.length - 1 : 0]);
+    return isFinite(d) ? d * 24 : null;
+  }
+
+  function enviar(cep, ok, corpo, cart) {
+    var rates = (corpo && corpo.shipping_rates) || [];
+    var total = cart.total_price / 100;
+    var chave = cep + '|' + total + '|' + rates.length;
+    if (enviados[chave]) return;
+    enviados[chave] = true;
+    var precos = [];
+    for (var i = 0; i < rates.length; i++) { var pr = Number(rates[i].price); if (isFinite(pr)) precos.push(pr); }
+    var items = (cart.items || []).map(function (it) {
+      var id = String(it.product_id);
+      return {
+        item_id: id,
+        item_name: it.product_title || null,
+        item_brand: it.vendor || null,
+        item_variant: it.variant_title || null,
+        item_category: it.product_type || null,
+        price: it.final_price / 100,
+        quantity: it.quantity || 1,
+        shipping_details: rates.map(function (r) {
+          return {
+            price: Number(r.price) || 0,
+            min_due_hours: horas(r.delivery_days, false),
+            max_due_hours: horas(r.delivery_days, true),
+            type: 'delivery',
+            name: r.name || null,
+            pickup_store_id: null,
+            item_id: id
+          };
+        })
+      };
+    });
+    var trk = tracker();
+    var indisponivel = !ok || !rates.length;
+    var params = {
+      user_pseudo_id: pseudoId(cookie('_ga')) || trk.client_id || null,
+      ga_session_id: sessionId(cookie('_ga_' + GA4)) || trk.session_id || null,
+      mm_fid: cookie('mm_fid') || null,
+      step: 'view_cart',
+      zipcode: cep,
+      items: items,
+      total_cart_items: total,
+      total_shipping_price: precos.length ? Math.min.apply(null, precos) : 0
+    };
+    if (indisponivel) { params.status = 'freight_unavailable'; }
+    original(DEST, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_name: NOME, event_params: params }),
+      keepalive: true
+    })['catch'](function () {});
+  }
+
+  window.fetch = function (input) {
+    var promessa = original.apply(this, arguments);
+    try {
+      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      if (url.indexOf('/cart/shipping_rates.json') !== -1) {
+        var cep = (new URL(url, location.origin).searchParams.get('shipping_address[zip]') || '').replace(/\D+/g, '');
+        if (cep) {
+          promessa.then(function (resp) {
+            var ok = resp.ok;
+            return resp.clone().json()['catch'](function () { return {}; }).then(function (corpo) {
+              return original('/cart.js', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (cart) {
+                enviar(cep, ok, corpo, cart);
+              });
+            });
+          })['catch'](function () {});
+        }
+      }
+    } catch (e) { /* nunca quebra a calculadora */ }
+    return promessa;
+  };
+})();
+</script>
