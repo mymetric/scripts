@@ -122,4 +122,67 @@
   analytics.subscribe('checkout_shipping_info_submitted', function (event) {
     try { enviar(event.data.checkout); } catch (e) { /* nunca quebra o checkout */ }
   });
+
+  // Carrinho: a calculadora "Calcular frete" do drawer roda na página, que o pixel não vê.
+  // O trecho do tema (allcatrazes_frete_carrinho_tema.html) publica mm_frete_carrinho com
+  // o CEP, as opções de frete e o carrinho; aqui vira step 'view_cart', como na Linus.
+  function postar(params) {
+    return Promise.all([cookie('_ga'), cookie('_ga_' + GA4.replace('G-', '')), cookie('mm_fid'), cookie('mm_tracker')]).then(function (c) {
+      var trk = mmTracker(c[3]);
+      params.user_pseudo_id = pseudoId(c[0]) || trk.client_id || null;
+      params.ga_session_id = sessionId(c[1]) || trk.session_id || null;
+      params.mm_fid = c[2] || null;
+      return fetch(DEST, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_name: NOME, event_params: params }),
+        keepalive: true
+      });
+    }).catch(function () {});
+  }
+
+  function enviarCarrinho(d) {
+    if (!d || !d.zipcode) return;
+    var rates = d.rates || [];
+    var chave = 'cart|' + d.zipcode + '|' + d.cart_total + '|' + rates.length;
+    if (enviados[chave]) return;
+    enviados[chave] = true;
+    var horas = function (dias) { return dias && dias.length ? Number(dias[dias.length - 1]) * 24 : null; };
+    var horasMin = function (dias) { return dias && dias.length ? Number(dias[0]) * 24 : null; };
+    var precos = rates.map(function (r) { return Number(r.price); }).filter(isFinite);
+    var items = (d.items || []).map(function (i) {
+      return {
+        item_id: i.product_id || null,
+        item_name: i.title || null,
+        item_brand: i.vendor || null,
+        item_variant: i.variant_title || null,
+        item_category: i.product_type || null,
+        price: i.price,
+        quantity: i.quantity || 1,
+        shipping_details: rates.map(function (r) {
+          return {
+            price: Number(r.price) || 0,
+            min_due_hours: horasMin(r.delivery_days),
+            max_due_hours: horas(r.delivery_days),
+            type: 'delivery',
+            name: r.name || null,
+            pickup_store_id: null,
+            item_id: i.product_id || null
+          };
+        })
+      };
+    });
+    postar({
+      step: 'view_cart',
+      zipcode: d.zipcode,
+      items: items,
+      total_cart_items: d.cart_total,
+      total_shipping_price: precos.length ? Math.min.apply(null, precos) : 0,
+      status: d.status === 'freight_unavailable' ? 'freight_unavailable' : null
+    });
+  }
+
+  analytics.subscribe('mm_frete_carrinho', function (event) {
+    try { enviarCarrinho(event.customData); } catch (e) { /* segue */ }
+  });
 })();

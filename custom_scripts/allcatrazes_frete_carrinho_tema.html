@@ -1,0 +1,53 @@
+<!-- Allcatrazes — avisa o pixel "MyMetric - Frete" quando o cliente calcula o frete no carrinho.
+     Instalar no tema: Personalizar > adicionar seção "Liquid personalizado" no rodapé (ou colar
+     antes do </body> do theme.liquid). Não altera a calculadora do tema: só observa a chamada
+     /cart/shipping_rates.json que ela já faz e publica o resultado como evento de cliente
+     (mm_frete_carrinho). Quem envia para a MyMetric é o pixel, no Customer Events. -->
+<script>
+(function () {
+  if (window.__mmFreteCarrinho || !window.fetch) return;
+  window.__mmFreteCarrinho = true;
+  var original = window.fetch;
+
+  function publicar(nome, dados) {
+    try {
+      if (window.Shopify && Shopify.analytics && Shopify.analytics.publish) {
+        Shopify.analytics.publish(nome, dados);
+      }
+    } catch (e) { /* nunca quebra a calculadora */ }
+  }
+
+  window.fetch = function (input) {
+    var promessa = original.apply(this, arguments);
+    try {
+      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      if (url.indexOf('/cart/shipping_rates.json') !== -1) {
+        var cep = (new URL(url, location.origin).searchParams.get('shipping_address[zip]') || '').replace(/\D+/g, '');
+        promessa.then(function (resp) {
+          var ok = resp.ok;
+          return resp.clone().json().catch(function () { return {}; }).then(function (corpo) {
+            return original('/cart.js', { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (cart) {
+              publicar('mm_frete_carrinho', {
+                zipcode: cep,
+                status: ok && corpo.shipping_rates && corpo.shipping_rates.length ? 'ok' : 'freight_unavailable',
+                rates: (corpo.shipping_rates || []).map(function (r) {
+                  return { name: r.name, price: r.price, delivery_days: r.delivery_days || [], code: r.code || null };
+                }),
+                cart_total: cart.total_price / 100,
+                items: (cart.items || []).map(function (i) {
+                  return {
+                    product_id: String(i.product_id), variant_id: String(i.variant_id),
+                    title: i.product_title, variant_title: i.variant_title, vendor: i.vendor,
+                    product_type: i.product_type, price: i.final_price / 100, quantity: i.quantity
+                  };
+                })
+              });
+            });
+          });
+        }).catch(function () {});
+      }
+    } catch (e) { /* segue */ }
+    return promessa;
+  };
+})();
+</script>
