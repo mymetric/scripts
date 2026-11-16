@@ -191,80 +191,6 @@ function primeiroShippingInfoDoCheckout(checkout) {
   mmShippingInfoEnviado.add(chave);
   return true;
 }
-// 🚚 Frete escolhido no checkout -> <slug>_shipping_calculation (gtms.shipping_calculation).
-// Mesmo formato do shipping_calc das lojas com calculadora no carrinho (Linus, ABC...),
-// com step 'add_shipping_info'. Na Web Pixels API o checkout.shippingLine só tem
-// `price` (não tem title): nome e tipo do frete vêm de delivery.selectedDeliveryOptions.
-// Sai um por (checkout, opção, preço): trocar de Sedex pra PAC gera outro, repetir não.
-// Ligado só nas lojas da lista (Allcatrazes, pedido de 14/11/2026).
-const MM_FRETE_SLUGS = ['allcatrazes'];
-const mmFreteEnviado = new Set();
-function mmFreteSelecionado(checkout) {
-  const op = checkout?.delivery?.selectedDeliveryOptions?.[0];
-  const bruto = op?.costAfterDiscounts?.amount ?? op?.cost?.amount ?? checkout?.shippingLine?.price?.amount;
-  if (!op && (bruto === undefined || bruto === null)) return null;
-  const preco = Number(bruto);
-  return {
-    name: op?.title || null,
-    type: op?.type ? String(op.type).toLowerCase() : 'delivery',
-    handle: op?.handle || null,
-    price: isFinite(preco) ? preco : 0,
-    price_before_discount: op?.cost?.amount != null ? Number(op.cost.amount) : null,
-    min_due_hours: null,
-    max_due_hours: null,
-    pickup_store_id: null
-  };
-}
-function enviarFreteCheckout(checkout, customerSlug, debugMode) {
-  if (!MM_FRETE_SLUGS.includes(customerSlug)) return;
-  const frete = mmFreteSelecionado(checkout);
-  if (!frete) return;
-  const chave = (checkout?.token || 'sem_token') + '|' + frete.name + '|' + frete.price;
-  if (mmFreteEnviado.has(chave)) return;
-  mmFreteEnviado.add(chave);
-  const mm = parseMmTracker(mmCookieCache.mm_tracker);
-  const trk = mm && typeof mm === 'object' ? mm : {};
-  const items = (checkout?.lineItems || []).map(li => {
-    const v = li?.variant;
-    const itemId = v?.product?.id || null;
-    return {
-      item_id: itemId,
-      item_name: v?.product?.title || li?.title || null,
-      item_brand: v?.product?.vendor || null,
-      item_variant: v?.title || null,
-      item_category: v?.product?.type || null,
-      price: v?.price?.amount != null ? Number(v.price.amount) : null,
-      quantity: li?.quantity || 1,
-      shipping_details: [{ ...frete, item_id: itemId }]
-    };
-  });
-  const nome = customerSlug + '_shipping_calculation';
-  const body = {
-    event_name: nome,
-    event_params: {
-      user_pseudo_id: trk.client_id || mmCookieCache.mm_cid || null,
-      ga_session_id: trk.session_id || null,
-      mm_fid: mmCookieCache.mm_fid || null,
-      step: 'add_shipping_info',
-      zipcode: (checkout?.shippingAddress?.zip || '').replace(/\D+/g, '') || null,
-      province: checkout?.shippingAddress?.provinceCode || null,
-      checkout_token: checkout?.token || null,
-      items: items,
-      total_cart_items: checkout?.subtotalPrice?.amount != null ? Number(checkout.subtotalPrice.amount) : null,
-      total_shipping_price: frete.price
-    }
-  };
-  try {
-    fetch('https://events.mymetric.app/posts?event_name=' + encodeURIComponent(nome), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      keepalive: true
-    }).then(res => {
-      if (debugMode) console.log(`%c🚚 MyMetricHUB - frete enviado: ${frete.name} R$ ${frete.price} (${res.status})`, 'color: #10b981; font-size: 10px;');
-    }).catch(() => {});
-  } catch (e) { /* frete é extra: nunca derruba o resto do tracking */ }
-}
 // 📘 Função centralizada para disparos do Meta Pixel
 //
 // 🔁 Dedup com o servidor: o Heimdall manda os mesmos eventos de funil
@@ -824,17 +750,16 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       country: event.data.checkout?.shippingAddress?.country,
       city: event.data.checkout?.shippingAddress?.city,
       postalCode: event.data.checkout?.shippingAddress?.zip,
-      shippingMethod: event.data.checkout?.delivery?.selectedDeliveryOptions?.[0]?.title || 'Standard'
+      shippingMethod: event.data.checkout?.shippingLine?.title || 'Standard'
     });
    
     if (primeiroShippingInfoDoCheckout(event.data.checkout)) {
       trackGA4Event("add_shipping_info", {
         currency: event.data.checkout?.currencyCode,
         value: event.data.checkout?.totalPrice?.amount,
-        shipping_tier: event.data.checkout?.delivery?.selectedDeliveryOptions?.[0]?.title || event.data.checkout?.shippingLine?.title
+        shipping_tier: event.data.checkout?.shippingLine?.title
       }, pageLocation, pageTitle);
     }
-    try { enviarFreteCheckout(event.data.checkout, customerSlug, debugMode); } catch (e) { /* segue */ }
    
   }
   if(event.name === "alert_displayed") {
@@ -902,7 +827,7 @@ function mymetric_onetag_shopify_events(event, customerSlug = 'unknown', debugMo
       trackGA4Event("add_shipping_info", {
         currency: checkout?.currencyCode,
         value: checkout?.totalPrice?.amount,
-        shipping_tier: checkout?.delivery?.selectedDeliveryOptions?.[0]?.title || checkout?.shippingLine?.title
+        shipping_tier: checkout?.shippingLine?.title
       }, pageLocation, pageTitle);
     }
    
