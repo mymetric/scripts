@@ -16,14 +16,23 @@
   var DEST = 'https://events.mymetric.app/posts?event_name=' + NOME;
   var enviados = {};
 
+  // document.cookie primeiro: no pixel personalizado ele enxerga os cookies da loja
+  // (_ga, _ga_XXXX, mm_tracker), e o browser.cookie.get devolve vazio (medido 16/11/2026).
   function cookie(nome) {
     try {
+      var m = document.cookie.match(new RegExp('(?:^|; )' + nome + '=([^;]*)'));
+      if (m && m[1]) return Promise.resolve(m[1]);
       if (typeof browser !== 'undefined' && browser && browser.cookie && browser.cookie.get) {
         return Promise.resolve(browser.cookie.get(nome)).catch(function () { return null; });
       }
-      var m = document.cookie.match(new RegExp('(?:^|; )' + nome + '=([^;]*)'));
-      return Promise.resolve(m ? m[1] : null);
-    } catch (e) { return Promise.resolve(null); }
+    } catch (e) { /* segue sem */ }
+    return Promise.resolve(null);
+  }
+  function mmTracker(raw) {
+    if (!raw) return {};
+    try { return JSON.parse(decodeURIComponent(raw)) || {}; } catch (e) {
+      try { return JSON.parse(raw) || {}; } catch (e2) { return {}; }
+    }
   }
 
   // _ga = GA1.1.<rand>.<ts> -> user_pseudo_id <rand>.<ts>
@@ -84,12 +93,13 @@
       };
     });
 
-    Promise.all([cookie('_ga'), cookie('_ga_' + GA4.replace('G-', '')), cookie('mm_fid')]).then(function (c) {
+    Promise.all([cookie('_ga'), cookie('_ga_' + GA4.replace('G-', '')), cookie('mm_fid'), cookie('mm_tracker')]).then(function (c) {
+      var trk = mmTracker(c[3]);
       var corpo = {
         event_name: NOME,
         event_params: {
-          user_pseudo_id: pseudoId(c[0]),
-          ga_session_id: sessionId(c[1]),
+          user_pseudo_id: pseudoId(c[0]) || trk.client_id || null,
+          ga_session_id: sessionId(c[1]) || trk.session_id || null,
           mm_fid: c[2] || null,
           step: 'add_shipping_info',
           zipcode: ((ck.shippingAddress && ck.shippingAddress.zip) || '').replace(/\D+/g, '') || null,
